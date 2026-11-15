@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -310,7 +311,7 @@ input {
 <div id="overlay">
 
   <div class="modal" id="welcome">
-    <h1>Junior Astronaut Training</h1>
+    <h1>Junior Astronaut Trainer</h1>
     <p>
       Welcome, trainee! Explore a lunar outpost, learn how real
       space technologies work, collect equipment and assemble
@@ -396,7 +397,7 @@ input {
     </p>
     <p style="color:#f0d99c">SOLAR POWER · WATER · OXYGEN · HABITAT · CULTIVATION</p>
     <div class="cert-line"></div>
-    <p style="font-size:13px">JUNIOR ASTRONAUT TRAINING PROGRAM</p>
+    <p style="font-size:13px">JUNIOR ASTRONAUT TRAINER PROGRAM</p>
     <button id="restart">RETURN TO TRAINING HOME</button>
   </div>
 
@@ -410,7 +411,7 @@ input {
 
 <div id="hud" class="hidden">
   <div id="top">
-    <div class="panel" id="brand">JUNIOR ASTRONAUT TRAINING</div>
+    <div class="panel" id="brand">JUNIOR ASTRONAUT TRAINER</div>
     <div class="panel" id="stats">
       <span id="pilotLabel">PIONEER</span><br>
       ENERGY: <b id="energy">100%</b>
@@ -1468,242 +1469,163 @@ function animate() {
   }
 
   // Broad lunar-surface freedom outside the outpost.
-  // The staircase is a continuous two-way path: height is derived from the
-  // player's position along it, not from a one-way trigger or a jump.
-  const stairXMin=5.25;
-  const stairXMax=14.75;
-  const stairStartZ=20.5;
-  const stairEndZ=40.0;
+  const px=player.position.x;
+  const pz=player.position.z;
 
-  const onStairCorridor=
-   player.position.x>=stairXMin &&
-   player.position.x<=stairXMax &&
-   player.position.z>=stairStartZ &&
-   player.position.z<=stairEndZ;
+  player.position.x=THREE.MathUtils.clamp(px,-95,95);
+  player.position.z=THREE.MathUtils.clamp(pz,-100,100);
 
-  if(playerLevel==='ground') {
-   player.position.x=THREE.MathUtils.clamp(player.position.x,-120,120);
-   player.position.z=THREE.MathUtils.clamp(player.position.z,-120,120);
-
-   if(onStairCorridor) {
-    const progress=THREE.MathUtils.clamp(
-     (player.position.z-stairStartZ)/(stairEndZ-stairStartZ),
-     0,
-     1
-    );
-
-    player.position.y=8.35*(1-progress);
-
-    if(progress<=.025) {
-     playerLevel='roof';
-     roofAccess=true;
-     player.position.y=8.35;
-    }
-
-   } else {
-    player.position.y=0;
-    roofAccess=false;
-   }
-
+  // Walkable stair transition and roof access.
+  if(player.position.z>20&&player.position.z<40&&player.position.x>5&&player.position.x<15) {
+   playerLevel='roof';
+   player.position.y=THREE.MathUtils.clamp((39.4-player.position.z)*.43,0,8);
   } else {
-   // On the roof, allow movement into the stair corridor; once there,
-   // keep following its slope all the way to ground level.
-   const insideStairWidth=
-    player.position.x>=stairXMin &&
-    player.position.x<=stairXMax;
-
-   if(insideStairWidth && player.position.z>=stairStartZ-.35) {
-    player.position.z=THREE.MathUtils.clamp(
-     player.position.z,
-     stairStartZ-.35,
-     stairEndZ+.25
-    );
-
-    const progress=THREE.MathUtils.clamp(
-     (player.position.z-stairStartZ)/(stairEndZ-stairStartZ),
-     0,
-     1
-    );
-
-    player.position.y=8.35*(1-progress);
-
-    if(progress>=.985) {
-     playerLevel='ground';
-     roofAccess=false;
-     player.position.y=0;
-     player.position.z=stairEndZ+.05;
-    }
-
-   } else {
-    // Clamp the roof edge but never reset the player to ground level.
-    player.position.x=THREE.MathUtils.clamp(player.position.x,-25.5,25.5);
-    player.position.z=THREE.MathUtils.clamp(
-     player.position.z,
-     -29.5,
-     stairStartZ-.4
-    );
-    player.position.y=8.35;
-    roofAccess=true;
-   }
+   playerLevel=player.position.y>7.5?'roof':'ground';
+   player.position.y=player.position.y>7.5?8:0;
   }
-
-  if(keys.ArrowLeft)yaw+=dt*1.5;
-  if(keys.ArrowRight)yaw-=dt*1.5;
-
-  camera.position.y=1.65;
-  camera.rotation.order='YXZ';
-  camera.rotation.y=yaw;
-  camera.rotation.x=pitch;
 
   if(held) {
-   held.mesh.position.set(0,-.2,-1.6);
-   held.mesh.rotation.y=Math.sin(performance.now()*.001)*.07;
+   $('carrying').textContent=held.name.toUpperCase();
+  } else {
+   $('carrying').textContent='NOTHING';
   }
-
-  if(door) {
-   const near=Math.abs(player.position.x)<4.5&&player.position.z>17;
-   door.position.x=near?6.5:0;
-  }
-
-  energy-=dt*.025;
-
-  if(completed.has('solar'))
-   energy=Math.min(100,energy+dt*.4);
 
   energy=Math.max(0,energy);
-
-  if(energy===0)pauseGame();
-
   $('energy').textContent=Math.floor(energy)+'%';
   $('energyFill').style.width=energy+'%';
-  $('carrying').textContent=held?held.name.toUpperCase():'NOTHING';
 
-  const part=nearestPart();
+  if(energy<=0) {
+   message('Energy depleted. Mission paused.');
+   pauseGame();
+  }
+
+  const near=nearestPart();
 
   if(held) {
-   message('Carry your equipment to the matching assembly bay. Press Q to drop.');
-
-  } else if(player.position.y>7.5) {
-   message('You are on the roof. Carry the solar array to its marked installation area.');
-
-  } else if(part) {
-   message('Press E to collect: '+part.name);
-
-  } else {
-   message('Explore the outpost and assemble the five settlement systems.');
+   message('Press E to install equipment at its assembly bay. Press Q to drop.');
+  } else if(near) {
+   message('Press E to collect '+near.name);
   }
  }
 
  renderer.render(scene,camera);
 }
 
+const briefingSlides=[
+ ['WELCOME TO THE MOON','Your mission is to establish a working lunar settlement. Explore the outpost and learn how astronauts could use local resources to support life.'],
+ ['SOLAR POWER','Solar panels collect sunlight and convert it into electrical energy. Batteries store electricity for periods when sunlight is unavailable.'],
+ ['WATER PRODUCTION','The lunar soil, called regolith, may contain frozen water. Heating, condensation and purification can help make water available for the crew.'],
+ ['OXYGEN PRODUCTION','Oxygen may be extracted from oxygen-bearing lunar minerals through processes such as molten regolith electrolysis.'],
+ ['CREW HABITAT','A lunar habitat needs a sealed pressure boundary, radiation protection and environmental control systems to support its occupants.'],
+ ['CULTIVATION','Plant growth beds, nutrient supplies, irrigation and LED lights can support controlled food cultivation.'],
+ ['YOUR MISSION','Collect the equipment, carry it to the correct assembly area and bring all five systems online. Good luck, astronaut!']
+];
+
+function showBriefing() {
+ const slide=briefingSlides[briefingIndex];
+ $('slideCount').textContent=`BRIEFING ${briefingIndex+1} / ${briefingSlides.length}`;
+ $('slideTitle').textContent=slide[0];
+ $('slidebody').textContent=slide[1];
+ $('previousSlide').style.display=briefingIndex===0?'none':'inline-block';
+ $('nextSlide').textContent=briefingIndex===briefingSlides.length-1?'START MISSION':'NEXT';
+}
+
 function startGame() {
  astronaut=$('pilotName').value.trim()||'Pioneer';
- started=true;
- paused=false;
-
- buildWorld();
-
  $('pilotLabel').textContent=astronaut.toUpperCase();
- $('welcome').classList.add('hidden');
- $('briefing').classList.add('hidden');
+ $('certName').textContent=astronaut;
+
  $('overlay').classList.add('hidden');
  $('hud').classList.remove('hidden');
 
- updateTasks();
+ buildWorld();
  equipmentLibrary();
+ updateTasks();
 
- renderer.domElement.addEventListener('click',()=>{
-  if(!paused&&!document.pointerLockElement)
-   renderer.domElement.requestPointerLock();
- });
+ started=true;
+ paused=false;
 
+ renderer.domElement.requestPointerLock?.();
  animate();
 }
 
-const slides=[
- ['Welcome to the Moon','Welcome, trainee! I am your mission mentor. Your task is to build a small lunar settlement. We will collect equipment, understand its purpose and install it in the correct assembly bay.'],
- ['Solar power','The photovoltaic panels are mounted on the roof. They collect sunlight and turn it into electricity. The battery stores electricity, and cables distribute it to the outpost.'],
- ['Water production','The auger drills into lunar soil. The thermal extraction unit heats the collected material. The condenser cools the vapour into water, and the purifier cleans it.'],
- ['Oxygen production','The feed hopper supplies lunar soil to the electrolysis reactor. The reactor uses heat and electricity to separate oxygen from minerals. The oxygen tank stores the gas.'],
- ['Outpost protection and life support','The pressure envelope seals the entire occupied outpost. Radiation shielding is distributed around the perimeter and roof, while the environmental-control and life-support network circulates and conditions air throughout the modules.'],
- ['Growing food','Growth beds hold the plants. The nutrient tank stores plant food, the LED lights help plants grow, the pump moves water and the seedling tray protects young plants.'],
- ['Look around!','WASD moves you, the mouse looks around, E collects or installs equipment, Q drops it and ESC pauses. Walk out through the front entrance and use the wide staircase immediately beside it. The astronaut follows the stair slope in both directions. Walk forward to climb and reverse direction to descend; stay between the handrails. Carry the solar array to the rooftop mounting cradle immediately beside the top of the staircase. For radiation protection, carry one shield package to the front entrance area and press E once. It automatically deploys protection on all four sides.']
-];
+$('colors').addEventListener('click',e=>{
+ const swatch=e.target.closest('.swatch');
+ if(!swatch)return;
 
-function showSlide() {
- const slide=slides[briefingIndex];
+ document.querySelectorAll('.swatch').forEach(el=>el.classList.remove('selected'));
+ swatch.classList.add('selected');
+ suitColor=swatch.dataset.color;
+});
 
- $('slideCount').textContent=`BRIEFING ${briefingIndex+1} / ${slides.length}`;
- $('slideTitle').textContent=slide[0];
- $('slidebody').textContent=slide[1];
-
- $('previousSlide').disabled=briefingIndex===0;
- $('nextSlide').textContent=briefingIndex===slides.length-1?'BEGIN TRAINING':'NEXT';
-}
-
-$('colors').onclick=e=>{
- if(!e.target.dataset.color)return;
-
- document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
- e.target.classList.add('selected');
- suitColor=e.target.dataset.color;
-};
-
-$('beginBriefing').onclick=()=>{
+$('beginBriefing').addEventListener('click',()=>{
  $('welcome').classList.add('hidden');
  $('briefing').classList.remove('hidden');
  briefingIndex=0;
- showSlide();
-};
+ showBriefing();
+});
 
-$('previousSlide').onclick=()=>{
- if(briefingIndex>0)briefingIndex--;
- showSlide();
-};
+$('previousSlide').addEventListener('click',()=>{
+ briefingIndex=Math.max(0,briefingIndex-1);
+ showBriefing();
+});
 
-$('nextSlide').onclick=()=>{
- if(briefingIndex<slides.length-1) {
-  briefingIndex++;
-  showSlide();
- } else {
+$('nextSlide').addEventListener('click',()=>{
+ if(briefingIndex===briefingSlides.length-1) {
   startGame();
- }
-};
-
-$('exit').onclick=pauseGame;
-$('resume').onclick=resumeGame;
-$('quit').onclick=exitGame;
-$('restart').onclick=()=>location.reload();
-
-addEventListener('keydown',e=>{
- if(e.code==='Escape') {
-  if(!paused)pauseGame();
   return;
  }
 
+ briefingIndex++;
+ showBriefing();
+});
+
+$('resume').addEventListener('click',resumeGame);
+$('quit').addEventListener('click',exitGame);
+$('exit').addEventListener('click',pauseGame);
+
+$('restart').addEventListener('click',()=>{
+ location.reload();
+});
+
+document.addEventListener('keydown',e=>{
  keys[e.code]=true;
+
+ if(e.code==='Escape') {
+  if(!paused)pauseGame();
+ }
 
  if(e.code==='KeyE'&&!paused)interact();
  if(e.code==='KeyQ'&&!paused)dropPart();
 });
 
-addEventListener('keyup',e=>keys[e.code]=false);
-
-addEventListener('mousemove',e=>{
- if(document.pointerLockElement&&!paused) {
-  yaw-=e.movementX*.0012;
-  pitch=THREE.MathUtils.clamp(pitch-e.movementY*.0012,-1.25,1.25);
- }
+document.addEventListener('keyup',e=>{
+ keys[e.code]=false;
 });
 
-addEventListener('resize',()=>{
- if(camera&&renderer) {
-  camera.aspect=innerWidth/innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);
- }
+document.addEventListener('mousemove',e=>{
+ if(document.pointerLockElement!==renderer?.domElement||paused)return;
+
+ yaw-=e.movementX*.002;
+ pitch-=e.movementY*.002;
+ pitch=THREE.MathUtils.clamp(pitch,-1.45,1.45);
+
+ player.rotation.y=yaw;
+ camera.rotation.x=pitch;
+});
+
+document.addEventListener('pointerlockchange',()=>{
+ if(!document.pointerLockElement&&started&&!paused)pauseGame();
+});
+
+window.addEventListener('resize',()=>{
+ if(!camera||!renderer)return;
+
+ camera.aspect=innerWidth/innerHeight;
+ camera.updateProjectionMatrix();
+ renderer.setSize(innerWidth,innerHeight);
 });
 </script>
+
 </body>
 </html>
