@@ -1,1 +1,1709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Junior Astronaut Training</title>
 
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Rajdhani:wght@500;600;700&family=Playfair+Display:ital,wght@1,700;1,800&display=swap');
+
+:root {
+  --blue:#9abac7;
+  --gold:#c6a66b;
+  --green:#86b9a2;
+  --panel:rgba(12,22,31,.94);
+  --border:#526b79;
+  --white:#e6edf0;
+}
+
+* {box-sizing:border-box}
+
+body {
+  margin:0;
+  overflow:hidden;
+  background:#080f19;
+  color:var(--white);
+  font-family:'Rajdhani',sans-serif;
+  font-size:22px;
+  letter-spacing:.01em;
+}
+
+canvas {display:block}
+
+#overlay {
+  position:fixed;
+  inset:0;
+  z-index:10;
+  display:grid;
+  place-items:center;
+  padding:15px;
+  background:radial-gradient(ellipse at 50% 20%,rgba(55,82,96,.88),rgba(7,14,22,.97) 72%);
+  overflow:auto;
+}
+
+.modal {
+  width:min(820px,96vw);
+  max-height:94vh;
+  overflow:auto;
+  padding:30px;
+  border:1px solid #607987;
+  border-radius:10px;
+  background:linear-gradient(145deg,rgba(34,50,61,.98),rgba(12,23,32,.99));
+  box-shadow:0 24px 90px #000c, inset 0 1px rgba(255,255,255,.06);
+}
+
+.hidden {display:none!important}
+
+.eyebrow {
+  font:700 17px Orbitron,sans-serif;
+  letter-spacing:.16em;
+  color:#9ed5e4;
+}
+
+h1 {
+  margin:10px 0;
+  font:700 clamp(32px,5vw,58px) 'Rajdhani',sans-serif;
+  letter-spacing:.025em;
+  color:#d6e2e7;
+  text-shadow:0 3px 18px #0008;
+}
+
+h2 {
+  font:700 25px 'Rajdhani',sans-serif;
+  letter-spacing:.06em;
+  color:#d4e0e5;
+}
+
+p {
+  line-height:1.7;
+  color:#d1dfe4;
+}
+
+button {
+  padding:12px 18px;
+  border:1px solid #8bb6c2;
+  border-radius:5px;
+  background:linear-gradient(110deg,#345b6c,#426a69);
+  color:white;
+  font:700 18px Orbitron,sans-serif;
+  cursor:pointer;
+}
+
+button.secondary {
+  background:#405664;
+}
+
+input {
+  width:100%;
+  padding:12px;
+  margin:8px 0 16px;
+  border:1px solid #718c9a;
+  border-radius:8px;
+  background:#172b38;
+  color:white;
+  font:17px 'Rajdhani',sans-serif;
+}
+
+.colors {display:flex;gap:12px;margin:12px 0 20px}
+
+.swatch {
+  width:29px;
+  height:29px;
+  border-radius:50%;
+  border:2px solid white;
+  cursor:pointer;
+}
+
+.swatch.selected {
+  outline:3px solid #9bd9e7;
+  outline-offset:3px;
+}
+
+.mentor {
+  display:grid;
+  grid-template-columns:170px 1fr;
+  gap:22px;
+  align-items:center;
+  margin:15px 0;
+}
+
+.portrait {
+  height:220px;
+  border:1px solid #8ba5ae;
+  border-radius:14px;
+  overflow:hidden;
+  background:linear-gradient(145deg,#6d8591,#c2a98b);
+}
+
+.portrait svg {width:100%;height:100%}
+
+#slidebody {
+  min-height:130px;
+  font-size:19px;
+  line-height:1.7;
+}
+
+#hud {
+  position:fixed;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+}
+
+.panel {
+  position:absolute;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:7px;
+  padding:12px 15px;
+  box-shadow:0 8px 28px #0008, inset 0 1px rgba(255,255,255,.035);
+  backdrop-filter:blur(12px);
+}
+
+#top {
+  top:12px;
+  left:12px;
+  right:12px;
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+
+#brand {
+  font:700 13px 'Rajdhani',sans-serif;
+  letter-spacing:.16em;
+  color:#b6ccd5;
+}
+
+#stats {
+  font-size:22px;
+  line-height:1.7;
+}
+
+#stats b {color:#9de6c5}
+
+#mission {
+  top:132px;
+  right:12px;
+  left:auto;
+  width:265px;
+  max-height:42vh;
+  overflow:auto;
+  font-size:21px;
+  line-height:1.8;
+}
+
+#guide {
+  right:24px;
+  top:48%;
+  bottom:auto;
+  transform:translateY(-50%);
+  width:min(310px,28vw);
+  max-height:38vh;
+  overflow:auto;
+  font-size:22px;
+  line-height:1.65;
+}
+
+#equipment {
+  left:12px;
+  bottom:12px;
+  width:265px;
+  max-height:30vh;
+  overflow:auto;
+  pointer-events:auto;
+  font-size:20px;
+}
+
+#equipment button {
+  font:700 19px 'Rajdhani',sans-serif;
+  padding:5px 8px;
+  margin:3px;
+  background:#243b49;
+  border:1px solid #607986;
+}
+
+#prompt {
+  position:absolute;
+  bottom:12%;
+  left:50%;
+  transform:translateX(-50%);
+  color:#f4d99c;
+  text-shadow:0 2px 8px black;
+  font-size:24px;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+#cross {
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:10px;
+  height:10px;
+  border:2px solid white;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+}
+
+#exit {
+  position:absolute;
+  top:78px;
+  right:12px;
+  pointer-events:auto;
+}
+
+#certificate {
+  text-align:center;
+  border:4px double #d9c28c;
+  padding:35px 20px;
+  background:linear-gradient(145deg,#344c58,#192c39);
+}
+
+#certificate h1 {
+  color:#f0d99c;
+  font-size:clamp(35px,6vw,58px);
+}
+
+.cert-line {
+  height:1px;
+  background:#d9c28c;
+  margin:20px 0;
+}
+
+.cert-name {
+  font:italic 800 34px 'Playfair Display',serif;
+  color:#fff0c5;
+}
+
+@media(max-width:700px) {
+  .mentor {grid-template-columns:110px 1fr}
+  .portrait {height:160px}
+  #mission {
+    width:230px;
+    top:140px;
+    right:8px;
+    max-height:38vh;
+    font-size:19px;
+  }
+  #equipment {
+    width:215px;
+    max-height:25vh;
+    font-size:18px;
+  }
+  #guide {
+    width:245px;
+    right:8px;
+    top:52%;
+    bottom:auto;
+    max-height:32vh;
+    transform:translateY(-50%);
+    font-size:20px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div id="overlay">
+
+  <div class="modal" id="welcome">
+    <h1>Junior Astronaut Training</h1>
+    <p>
+      Welcome, trainee! Explore a lunar outpost, learn how real
+      space technologies work, collect equipment and assemble
+      the systems needed to establish a Moon settlement.
+    </p>
+
+    <label>ASTRONAUT NAME</label>
+    <input id="pilotName" maxlength="24" value="Pioneer">
+
+    <div class="eyebrow">CHOOSE YOUR SPACE SUIT</div>
+    <div class="colors" id="colors">
+      <i class="swatch selected" data-color="#36a9e8" style="background:#36a9e8"></i>
+      <i class="swatch" data-color="#e6a23c" style="background:#e6a23c"></i>
+      <i class="swatch" data-color="#d96b87" style="background:#d96b87"></i>
+      <i class="swatch" data-color="#8b79df" style="background:#8b79df"></i>
+      <i class="swatch" data-color="#72b78a" style="background:#72b78a"></i>
+    </div>
+
+    <button id="beginBriefing">MEET YOUR MISSION MENTOR</button>
+    <p style="font-size:18px">WASD: Move · Mouse: Look · E: Pick up/install · Q: Drop · ESC: Pause</p>
+  </div>
+
+  <div class="modal hidden" id="briefing">
+    <div class="eyebrow">MISSION BRIEFING</div>
+
+    <div class="mentor">
+      <div class="portrait">
+        <svg viewBox="0 0 180 220">
+          <defs>
+            <linearGradient id="skin" x2="0" y2="1">
+              <stop stop-color="#e0ae88"/>
+              <stop offset="1" stop-color="#a96c50"/>
+            </linearGradient>
+          </defs>
+          <path d="M15 220Q20 145 90 140Q160 145 165 220Z" fill="#e3e8e7" stroke="#506d7c" stroke-width="3"/>
+          <path d="M42 90Q35 15 90 12Q150 18 138 95L128 135H50Z" fill="#172b39" stroke="#a9c1c9" stroke-width="4"/>
+          <path d="M55 77Q55 35 91 34Q129 35 129 79L124 115Q117 141 91 143Q62 140 56 113Z" fill="url(#skin)"/>
+          <path d="M54 77Q55 34 90 29Q123 27 132 70L125 63Q100 49 57 74Z" fill="#202a32"/>
+          <path d="M66 86Q76 80 85 86M98 86Q108 80 117 86" fill="none" stroke="#45312a" stroke-width="3"/>
+          <ellipse cx="77" cy="94" rx="4" ry="3" fill="#202b31"/>
+          <ellipse cx="107" cy="94" rx="4" ry="3" fill="#202b31"/>
+          <path d="M91 95L87 109L95 111" fill="none" stroke="#875642" stroke-width="2"/>
+          <path d="M77 121Q92 132 107 120" fill="none" stroke="#713d3b" stroke-width="3" stroke-linecap="round"/>
+          <path d="M44 157Q90 135 136 157L158 220H22Z" fill="#e2e8e7" stroke="#708d98" stroke-width="3"/>
+          <path d="M67 151L91 181L115 151" fill="none" stroke="#648d9b" stroke-width="4"/>
+          <path d="M84 181L91 188L98 181" fill="#d4b26b"/>
+          <rect x="68" y="195" width="46" height="15" rx="3" fill="#426879"/>
+          <text x="91" y="205" text-anchor="middle" font-size="9" fill="white">INDIA</text>
+        </svg>
+      </div>
+
+      <div>
+        <h2>Kalpana</h2>
+      </div>
+    </div>
+
+    <div class="eyebrow" id="slideCount">BRIEFING 1 / 7</div>
+    <h2 id="slideTitle"></h2>
+    <div id="slidebody"></div>
+
+    <button class="secondary" id="previousSlide">BACK</button>
+    <button id="nextSlide">NEXT</button>
+  </div>
+
+  <div class="modal hidden" id="pause">
+    <div class="eyebrow">MISSION CONTROL</div>
+    <h1>MISSION PAUSED</h1>
+    <p>Your lunar mission is waiting.</p>
+    <button id="resume">RESUME MISSION</button>
+    <button class="secondary" id="quit">EXIT TRAINING</button>
+  </div>
+
+  <div class="modal hidden" id="certificate">
+    <h1>MISSION COMPLETED</h1>
+    <div class="cert-line"></div>
+    <p style="font-size:20px">This certificate is proudly presented to</p>
+    <div class="cert-name" id="certName">Pioneer</div>
+    <div class="cert-line"></div>
+    <h1>CERTIFIED<br>JUNIOR ASTRONAUT</h1>
+    <p>
+      For successfully completing the lunar settlement training mission
+      and assembling all five essential systems.
+    </p>
+    <p style="color:#f0d99c">SOLAR POWER · WATER · OXYGEN · HABITAT · CULTIVATION</p>
+    <div class="cert-line"></div>
+    <p style="font-size:13px">JUNIOR ASTRONAUT TRAINING PROGRAM</p>
+    <button id="restart">RETURN TO TRAINING HOME</button>
+  </div>
+
+  <div class="modal hidden" id="goodbye">
+    <h1>MISSION CLOSED</h1>
+    <p>Thank you for exploring the lunar outpost.</p>
+    <button onclick="location.reload()">RETURN TO HOME</button>
+  </div>
+
+</div>
+
+<div id="hud" class="hidden">
+  <div id="top">
+    <div class="panel" id="brand">JUNIOR ASTRONAUT TRAINING</div>
+    <div class="panel" id="stats">
+      <span id="pilotLabel">PIONEER</span><br>
+      ENERGY: <b id="energy">100%</b>
+      <div style="height:6px;background:#20394b;border-radius:8px">
+        <div id="energyFill" style="height:6px;width:100%;background:#65d8ad;border-radius:8px"></div>
+      </div>
+      CARRYING: <b id="carrying">NOTHING</b>
+    </div>
+  </div>
+
+  <div class="panel" id="mission">
+    <b style="color:#a9dce8">MISSION OBJECTIVES</b>
+    <div id="tasks"></div>
+  </div>
+
+  <div class="panel" id="guide">
+    <b id="guideTitle" style="color:#a9dce8">EQUIPMENT FIELD GUIDE</b>
+    <div id="guideText">Click any equipment name to learn what it does.</div>
+  </div>
+
+  <div class="panel" id="equipment">
+    <b>EQUIPMENT LIBRARY</b>
+    <div id="equipmentList"></div>
+  </div>
+
+  <div id="prompt">Explore the lunar outpost</div>
+  <div id="cross"></div>
+  <button id="exit">PAUSE / EXIT</button>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+const $ = id => document.getElementById(id);
+
+let scene,camera,renderer,clock,player,door,roofAccess=false;
+let playerLevel='ground';
+let yaw=0,pitch=0,energy=100;
+let keys={},parts=[],sites=[],held=null;
+let completed=new Set();
+let paused=true,started=false;
+let astronaut='Pioneer';
+let suitColor='#36a9e8';
+let briefingIndex=0;
+
+const groupSizes={
+  solar:3,water:4,oxygen:3,habitat:3,farm:5
+};
+
+const groupNames={
+  solar:'Solar Power',
+  water:'Water Production',
+  oxygen:'Oxygen Production',
+  habitat:'Crew Habitat',
+  farm:'Cultivation Module'
+};
+
+const explanations={
+  panel:['Photovoltaic Solar Array','These panels collect sunlight and convert it into electricity for the outpost.'],
+  battery:['Lithium-ion Battery','This stores electricity so the outpost can use it when sunlight is unavailable.'],
+  cable:['Power Distribution Cable','These protected cables carry electricity from the solar panels to the equipment.'],
+  drill:['Lunar Regolith Auger','This drill collects lunar soil that may contain frozen water.'],
+  heater:['Thermal Extraction Unit','This machine heats collected soil in a sealed chamber, releasing trapped water vapour.'],
+  condenser:['Vapour Condenser','This cools the vapour until it changes into liquid water.'],
+  purifier:['Water Purifier','This filters and treats the collected water.'],
+  feeder:['Regolith Feed Hopper','This funnel stores lunar soil and feeds it into the oxygen reactor.'],
+  reactor:['Molten Regolith Electrolysis Reactor','This uses heat and electricity to separate oxygen from minerals in lunar soil.'],
+  tank:['Oxygen Storage Tank','This safely stores the oxygen produced by the reactor.'],
+  pressure_shell:['Outpost-Wide Pressure Envelope','A continuous sealed pressure boundary encloses the connected habitat spaces. The walls, roof joints, doors and service penetrations must all be sealed; it is not a single module placed in one corner.'],
+  regolith_shield:['Radiation Shield System','Carry the single radiation-shield package to the front entrance area and press E. The system will automatically deploy protective berms in all four directions around the outpost.'],
+  eclss:['Distributed Environmental Control and Life Support System (ECLSS)','Air circulation, carbon-dioxide removal, humidity control, temperature regulation and monitoring are distributed through ducts and service units across the occupied modules.'],
+  bed:['Plant Growth Beds','These trays hold the growing material and plants.'],
+  nutrient:['Nutrient Reservoir','This stores water mixed with minerals that plants need.'],
+  lights:['LED Grow Lights','These lights provide the energy plants need to grow.'],
+  pump:['Irrigation Pump','This moves water and nutrients from the tank to the plants.'],
+  seedlings:['Seedling Tray','This holds and protects young plants as they begin growing.']
+};
+
+const specifications=[
+ ['panel','solar','Photovoltaic array',-19,10],
+ ['battery','solar','Lithium-ion battery',-19,4],
+ ['cable','solar','Power cable harness',-19,-2],
+
+ ['drill','water','Regolith auger',-10,10],
+ ['heater','water','Thermal extraction unit',-10,4],
+ ['condenser','water','Vapour condenser',-10,-2],
+ ['purifier','water','Water purifier',-10,-8],
+
+ ['feeder','oxygen','Regolith feed hopper',0,10],
+ ['reactor','oxygen','Electrolysis reactor',0,4],
+ ['tank','oxygen','Oxygen tank',0,-2],
+
+ ['pressure_shell','habitat','Outpost pressure envelope',10,10],
+ ['regolith_shield','habitat','Radiation shield deployment package',10,4],
+ ['eclss','habitat','Environmental life-support network',10,-2],
+
+ ['bed','farm','Growth beds',19,10],
+ ['nutrient','farm','Nutrient reservoir',19,4],
+ ['lights','farm','LED grow lights',19,-2],
+ ['pump','farm','Irrigation pump',19,-8],
+ ['seedlings','farm','Seedling tray',19,-14]
+];
+
+function mat(color,rough=.6,metal=0) {
+ return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
+}
+
+function addEquipmentDetails(group, accent='#9abac7') {
+ const boltMat=mat('#c0c9c9',.28,.82);
+ const darkMat=mat('#17242c',.72,.18);
+ // Fasteners, service ports and small status indicators give equipment a manufactured finish.
+ for(const x of [-.48,.48]) {
+  for(const z of [-.31,.31]) {
+   const bolt=cylinder(group,x,.88,z,.035,.025,boltMat);
+   bolt.rotation.x=Math.PI/2;
+  }
+ }
+ const status=new THREE.Mesh(new THREE.SphereGeometry(.045,12,10),new THREE.MeshStandardMaterial({color:accent,emissive:accent,emissiveIntensity:.45,roughness:.3}));
+ status.position.set(.48,.72,.39);
+ group.add(status);
+ const service=box(group,-.42,.72,.39,.18,.12,.035,darkMat);
+ service.material=darkMat;
+ return group;
+}
+
+function box(parent,x,y,z,w,h,d,material) {
+ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);
+ m.position.set(x,y,z);
+ m.castShadow=true;
+ m.receiveShadow=true;
+ parent.add(m);
+ return m;
+}
+
+function cylinder(parent,x,y,z,r,h,material) {
+ const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,20),material);
+ m.position.set(x,y,z);
+ m.castShadow=true;
+ parent.add(m);
+ return m;
+}
+
+function makeLabel(text) {
+ const canvas=document.createElement('canvas');
+ canvas.width=512;
+ canvas.height=100;
+ const ctx=canvas.getContext('2d');
+ ctx.fillStyle='#edf5f4';
+ ctx.fillRect(0,0,512,100);
+ ctx.strokeStyle='#4b899c';
+ ctx.lineWidth=5;
+ ctx.strokeRect(4,4,504,92);
+ ctx.fillStyle='#264d5c';
+ ctx.font='bold 30px Arial';
+ ctx.textAlign='center';
+ ctx.fillText(text,256,62);
+ const texture=new THREE.CanvasTexture(canvas);
+ const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture}));
+ sprite.scale.set(3.3,.65,1);
+ return sprite;
+}
+
+function makeEquipment(type) {
+ const g=new THREE.Group();
+ const metal=mat('#879ca7',.35,.6);
+ const dark=mat('#263b49',.45,.4);
+ const blue=mat('#317a9d',.3,.4);
+ const gold=mat('#c49c5b',.4,.5);
+ const white=mat('#dce5e4');
+ const green=mat('#5c9c69');
+
+ if(type==='panel') {
+  box(g,0,.1,0,1.5,.12,.95,dark);
+  for(let i=0;i<3;i++) {
+   box(g,-.45+i*.45,.2,0,.42,.04,.83,blue);
+   for(let j=0;j<6;j++) box(g,-.45+i*.45,.225,-.33+j*.13,.39,.012,.012,mat('#8fc5d5',.24,.5));
+   box(g,-.45+i*.45,.23,0,.025,.02,.82,mat('#9ddbea'));
+  }
+  box(g,0,-.02,0,1.28,.08,.78,metal);
+  for(const x of [-.55,.55]) {
+   const leg=box(g,x,-.18,0,.08,.32,.08,dark);
+  }
+  cylinder(g,0,-.1,0,.09,.4,metal);
+ }
+
+ if(type==='battery') {
+  box(g,0,.35,0,1,.7,.7,dark);
+  box(g,0,.73,0,.7,.08,.5,metal);
+  for(let i=0;i<3;i++) {
+   box(g,-.3+i*.3,.8,0,.1,.05,.15,gold);
+   box(g,-.3+i*.3,.37,.36,.12,.22,.025,blue);
+  }
+  for(const x of [-.42,.42]) cylinder(g,x,.42,-.37,.055,.12,metal);
+ }
+
+ if(type==='cable') {
+  box(g,0,.1,0,1,.18,.7,dark);
+  for(let i=0;i<3;i++) {
+   const torus=new THREE.Mesh(new THREE.TorusGeometry(.22,.05,8,24),mat(['#d8ad48','#55a9d4','#d56d68'][i]));
+   torus.position.set(-.3+i*.3,.3,0);
+   g.add(torus);
+  }
+ }
+
+ if(type==='drill') {
+  box(g,0,.35,0,.8,.6,.7,metal);
+  cylinder(g,0,-.1,0,.13,.45,gold);
+ }
+
+ if(type==='heater') {
+  box(g,0,.4,0,1,.75,.75,dark);
+  cylinder(g,0,.85,0,.3,.15,metal);
+  box(g,0,.3,.4,.45,.3,.05,mat('#d96c42'));
+ }
+
+ if(type==='condenser') {
+  box(g,0,.35,0,1,.6,.65,metal);
+  for(let i=0;i<5;i++) box(g,-.4+i*.2,.35,.36,.06,.65,.06,blue);
+ }
+
+ if(type==='purifier') {
+  cylinder(g,0,.4,0,.38,.85,white);
+  cylinder(g,0,.88,0,.4,.12,metal);
+ }
+
+ if(type==='feeder') {
+  box(g,0,.15,0,.85,.3,.7,metal);
+  cylinder(g,0,.55,0,.3,.55,gold);
+ }
+
+ if(type==='reactor') {
+  cylinder(g,0,.45,0,.44,.9,metal);
+  cylinder(g,0,.95,0,.5,.14,gold);
+  cylinder(g,0,-.03,0,.34,.12,dark);
+  for(let i=0;i<3;i++) {
+   box(g,-.25+i*.25,.45,.42,.07,.3,.05,mat('#d76d44'));
+   cylinder(g,-.25+i*.25,.45,.47,.035,.34,gold);
+  }
+  for(let a=0;a<4;a++) {
+   const x=Math.cos(a*Math.PI/2)*.47;
+   const z=Math.sin(a*Math.PI/2)*.47;
+   box(g,x,.35,z,.12,.62,.12,dark);
+  }
+ }
+
+ if(type==='tank') {
+  cylinder(g,0,.5,0,.38,1,white);
+  cylinder(g,0,1.05,0,.2,.12,metal);
+  cylinder(g,0,.02,0,.39,.1,dark);
+  for(let y of [.25,.72]) {
+   const band=new THREE.Mesh(new THREE.TorusGeometry(.385,.035,8,32),gold);
+   band.position.y=y;
+   g.add(band);
+  }
+  box(g,0,.58,.39,.22,.22,.04,blue);
+ }
+
+ if(type==='pressure_shell') {
+  box(g,0,.42,0,1.25,.85,.18,white);
+  box(g,0,.42,.12,1.08,.68,.08,blue);
+  for(let x of [-.55,.55]) box(g,x,.42,.18,.08,.95,.22,gold);
+  box(g,0,.92,0,1.35,.12,.28,metal);
+ }
+
+ if(type==='regolith_shield') {
+  box(g,0,.22,0,1.35,.42,.95,gold);
+  box(g,0,.47,0,1.25,.12,.85,mat('#8b8068'));
+  for(let x of [-.48,0,.48]) box(g,x,.56,0,.035,.06,.78,metal);
+  for(let x of [-.58,.58]) {
+   box(g,x,.27,0,.09,.5,1.02,dark);
+   cylinder(g,x,.05,-.35,.09,.08,metal);
+   cylinder(g,x,.05,.35,.09,.08,metal);
+  }
+  const label=box(g,0,.55,.45,.45,.16,.025,mat('#d5d9d5',.8,0));
+ }
+
+ if(type==='eclss') {
+  box(g,0,.48,0,.95,.95,.72,white);
+  box(g,0,.5,.38,.65,.55,.06,blue);
+  for(let x of [-.65,.65]) {
+   const duct=cylinder(g,x,.72,0,.12,.8,metal);
+   duct.rotation.z=Math.PI/2;
+  }
+  for(let i=0;i<4;i++) box(g,-.3+i*.2,.2,.4,.07,.18,.04,green);
+ }
+
+ if(type==='bed') {
+  box(g,0,.15,0,1.3,.3,.85,mat('#8e7453'));
+  box(g,0,.33,0,1.15,.06,.7,dark);
+  for(let i=0;i<5;i++) {
+   const leaf=new THREE.Mesh(new THREE.SphereGeometry(.12,12,10),green);
+   leaf.position.set(-.45+i*.22,.48,0);
+   leaf.scale.set(.7,1.5,.7);
+   g.add(leaf);
+  }
+ }
+
+ if(type==='nutrient') {
+  box(g,0,.3,0,.9,.6,.7,blue);
+  cylinder(g,0,.68,0,.3,.12,metal);
+ }
+
+ if(type==='lights') {
+  box(g,0,.12,0,1.25,.12,.5,dark);
+  for(let i=0;i<5;i++) box(g,-.48+i*.24,.02,0,.12,.04,.38,mat('#efaaaa'));
+ }
+
+ if(type==='pump') {
+  box(g,0,.3,0,.7,.55,.6,blue);
+  cylinder(g,.4,.3,0,.14,.35,gold);
+ }
+
+ if(type==='seedlings') {
+  box(g,0,.15,0,1.1,.25,.7,white);
+  for(let i=0;i<4;i++) {
+   cylinder(g,-.3+i*.2,.35,0,.035,.25,green);
+   const leaf=new THREE.Mesh(new THREE.SphereGeometry(.12),green);
+   leaf.position.set(-.3+i*.2,.5,0);
+   g.add(leaf);
+  }
+ }
+
+ box(g,0,-.72,0,1.35,.08,1.05,dark);
+ if(!['panel','regolith_shield','pressure_shell','eclss','bed','seedlings','lights'].includes(type)) {
+  addEquipmentDetails(g);
+ }
+ return g;
+}
+
+function makeSky() {
+ scene.background=new THREE.Color('#020710');
+ scene.fog=new THREE.Fog('#29343e',100,240);
+
+ const positions=[];
+ for(let i=0;i<1800;i++) {
+  const radius=150;
+  const theta=Math.random()*Math.PI*2;
+  const phi=Math.acos(2*Math.random()-1);
+  positions.push(
+   radius*Math.sin(phi)*Math.cos(theta),
+   radius*Math.cos(phi),
+   radius*Math.sin(phi)*Math.sin(theta)
+  );
+ }
+
+ const geometry=new THREE.BufferGeometry();
+ geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+
+ const stars=new THREE.Points(
+  geometry,
+  new THREE.PointsMaterial({color:'#ffffff',size:.48,sizeAttenuation:false})
+ );
+ scene.add(stars);
+
+ const earth=new THREE.Mesh(
+  new THREE.SphereGeometry(5,40,32),
+  new THREE.MeshStandardMaterial({
+   color:'#286b9e',
+   roughness:.8,
+   emissive:'#071c3b',
+   emissiveIntensity:.55
+  })
+ );
+ earth.position.set(-35,32,-90);
+ scene.add(earth);
+
+ const cloud=new THREE.Mesh(
+  new THREE.SphereGeometry(5.04,40,32),
+  new THREE.MeshBasicMaterial({
+   color:'#b5d9e7',
+   transparent:true,
+   opacity:.14,
+   side:THREE.BackSide
+  })
+ );
+ cloud.position.copy(earth.position);
+ scene.add(cloud);
+
+ for(let i=0;i<20;i++) {
+  const h=7+Math.random()*12;
+  const mountain=new THREE.Mesh(
+   new THREE.ConeGeometry(9+Math.random()*10,h,5),
+   mat('#454d56')
+  );
+  mountain.position.set(-150+i*16,h/2-1,-115);
+  scene.add(mountain);
+ }
+}
+
+function createMoonGround() {
+ const ground=new THREE.Mesh(
+  new THREE.PlaneGeometry(500,500),
+  mat('#77736c',1,0)
+ );
+ ground.rotation.x=-Math.PI/2;
+ ground.position.y=-.12;
+ ground.receiveShadow=true;
+ scene.add(ground);
+
+ for(let i=0;i<240;i++) {
+  const r=.3+Math.random()*1.7;
+  const rock=new THREE.Mesh(
+   new THREE.DodecahedronGeometry(r,1),
+   mat(i%3===0?'#777b7d':'#555d64',1,0)
+  );
+  let x=(Math.random()-.5)*190;
+  let z=(Math.random()-.5)*210;
+  if(Math.abs(x)<32&&z>-35&&z<35) continue;
+  rock.position.set(x,r*.3,z);
+  rock.rotation.set(Math.random(),Math.random(),Math.random());
+  rock.scale.y=.45+Math.random()*.5;
+  rock.castShadow=true;
+  scene.add(rock);
+ }
+
+ for(let i=0;i<38;i++) {
+  const r=1.5+Math.random()*4;
+  const crater=new THREE.Mesh(
+   new THREE.TorusGeometry(r,.28,8,32),
+   mat('#4c5157')
+  );
+  crater.rotation.x=Math.PI/2;
+  crater.position.set(
+   (Math.random()-.5)*170,
+   -.02,
+   (Math.random()-.5)*180
+  );
+  scene.add(crater);
+ }
+}
+
+function makeStation(group,x,z,title,description) {
+ const g=new THREE.Group();
+ g.position.set(x,0,z);
+ scene.add(g);
+
+ const pad=new THREE.Mesh(
+  new THREE.CylinderGeometry(4.5,4.5,.15,40),
+  mat('#8b9da1',.6,.2)
+ );
+ pad.position.y=.02;
+ g.add(pad);
+
+ const ring=new THREE.Mesh(
+  new THREE.CylinderGeometry(4.7,4.7,.08,40),
+  new THREE.MeshStandardMaterial({
+   color:'#54c8ef',
+   wireframe:true,
+   transparent:true,
+   opacity:.25
+  })
+ );
+ ring.position.y=.12;
+ g.add(ring);
+
+ const spine=box(g,0,.5,-3.2,7.5,.35,.4,mat('#78aeb7',.3,.4));
+ const beacon=new THREE.Mesh(
+  new THREE.SphereGeometry(.18,16,12),
+  mat('#45d5c2',.2,.2)
+ );
+ beacon.position.set(0,1,-3.2);
+ g.add(beacon);
+
+ const sign=makeLabel(title);
+ sign.position.set(0,3.1,0);
+ sign.scale.set(4.5,.7,1);
+ g.add(sign);
+
+ sites.push({group,x,z,title,description,g,ring,spine,beacon,built:false});
+}
+
+function buildWorld() {
+ scene=new THREE.Scene();
+ makeSky();
+
+ camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.08,500);
+
+ renderer=new THREE.WebGLRenderer({antialias:true});
+ renderer.setSize(innerWidth,innerHeight);
+ renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+ renderer.shadowMap.enabled=true;
+ renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+ renderer.outputColorSpace=THREE.SRGBColorSpace;
+ renderer.toneMapping=THREE.ACESFilmicToneMapping;
+ renderer.toneMappingExposure=1.0;
+ document.body.prepend(renderer.domElement);
+
+ scene.add(new THREE.HemisphereLight('#c5d3dc','#30363a',.9));
+
+ const fillLight=new THREE.DirectionalLight('#9eb9ca',.55);
+ fillLight.position.set(35,22,-25);
+ scene.add(fillLight);
+
+ const sun=new THREE.DirectionalLight('#e8dfcb',2.7);
+ sun.position.set(-35,55,30);
+ sun.castShadow=true;
+ sun.shadow.mapSize.set(3072,3072);
+ sun.shadow.camera.left=-90;
+ sun.shadow.camera.right=90;
+ sun.shadow.camera.top=90;
+ sun.shadow.camera.bottom=-90;
+ sun.shadow.bias=-.00018;
+ sun.shadow.normalBias=.025;
+ scene.add(sun);
+
+ createMoonGround();
+
+ box(scene,0,0,-4,54,.3,54,mat('#8d9da0',.6,.15));
+
+ const wall=mat('#a8b9bb',.5,.2);
+ const trim=mat('#7199a4',.4,.3);
+
+ for(const x of [-27,27]) {
+  box(scene,x,4,-4,.5,8,54,wall);
+  for(let z=-28;z<22;z+=6)
+   box(scene,x,4,z,.22,8,.2,trim);
+ }
+
+ box(scene,0,4,-31,54,8,.5,wall);
+
+ box(scene,-17,4,23,20,8,.5,wall);
+ box(scene,17,4,23,20,8,.5,wall);
+ box(scene,0,7.8,23,14,.4,.5,trim);
+
+ door=box(scene,0,3.5,22.7,5.8,7,.3,mat('#6a9ba8',.4,.25));
+
+ const glass=new THREE.MeshPhysicalMaterial({
+  color:'#a7dce4',
+  roughness:.15,
+  metalness:.1,
+  transparent:true,
+  opacity:.12,
+  side:THREE.DoubleSide
+ });
+
+ const roofDeck=box(scene,0,8,-4,54,.55,54,mat('#657b86',.55,.35));
+ roofDeck.receiveShadow=true;
+
+ box(scene,0,7.68,-4,52,.12,52,mat('#b1c1c0',.8,.05));
+
+ for(let z of [-28,-18,-8,2,12,22])
+  box(scene,0,7.48,z,53,.18,.28,trim);
+
+ // Wide, walkable access stair with a continuous sloped ramp surface.
+ // The ramp is the actual movement surface; treads and rails are visual guides.
+ const ladderMetal=mat('#9eafb5',.32,.72);
+ const rampMat=mat('#687b83',.72,.22);
+ const stepMat=mat('#aab5b6',.72,.18);
+ const rampAngle=Math.atan(8.35/19.5);
+ const ramp=box(scene,10,4.12,30.25,7.8,.62,19.5,rampMat);
+ ramp.rotation.x=rampAngle;
+
+ // Raised anti-slip transverse treads are evenly spaced along the ramp.
+ for(let i=0;i<13;i++) {
+  const z=39.4-i*1.48;
+  const y=.35+i*.64;
+  box(scene,10,y,z,7.35,.12,.18,stepMat);
+ }
+
+ // Handrails follow the incline and remain continuous at the top landing.
+ for(const x of [5.75,14.25]) {
+  for(let i=0;i<9;i++) {
+   const z=38.8-i*2.05;
+   const y=.95+i*.88;
+   box(scene,x,y,z,.14,1.35,.14,ladderMetal);
+  }
+
+  const rail=box(scene,x,4.55,30.25,.16,.16,19.5,ladderMetal);
+  rail.rotation.x=rampAngle;
+
+  box(scene,x,.8,39.4,.18,1.6,.18,ladderMetal);
+  box(scene,x,8.55,20.8,.18,1.2,.18,ladderMetal);
+ }
+
+ // A clear roof landing gives the player room to turn and place the array.
+ box(scene,10,8.39,19.15,9,.24,5.2,mat('#87989b',.62,.3));
+
+ for(const x of [6.1,13.9])
+  box(scene,x,8.65,18.7,.12,.28,4.5,ladderMetal);
+
+ // Solar panel arrays mounted on roof
+ for(let x of [-21,-13,-5,3,19]) {
+  const panel=box(scene,x,8.38,-8,6.3,.15,8,mat('#225778',.2,.55));
+  panel.rotation.x=-.08;
+
+  for(let j=0;j<4;j++)
+   box(scene,x-2.35+j*1.55,8.48,-8,.045,.025,7.7,mat('#8bcce0',.2,.4));
+ }
+
+ // Dedicated solar-array mounting cradle immediately beside the stair landing.
+ box(scene,10,8.55,17.25,4.6,.18,3.2,mat('#536c78',.42,.55));
+
+ for(const x of [8.2,11.8]) {
+  box(scene,x,8.83,17.25,.14,.42,2.5,mat('#a9b8b8',.35,.65));
+  box(scene,x,9.06,17.25,.32,.08,2.6,mat('#c2a76e',.35,.55));
+ }
+
+ const mountLabel=makeLabel('SOLAR ARRAY MOUNT');
+ mountLabel.position.set(10,10.1,17.25);
+ mountLabel.scale.set(3.8,.58,1);
+ scene.add(mountLabel);
+
+ // Homely crew corner
+ box(scene,0,.22,8,13,.18,5,mat('#987b61'));
+
+ for(let x of [-4.5,4.5]) {
+  box(scene,x,.85,8,2.2,1.2,1,mat('#c5b19a'));
+  box(scene,x,.5,7.35,2.3,.18,.25,mat('#83a6a3'));
+ }
+
+ for(let x of [-7,7]) {
+  cylinder(scene,x,6.7,7,.12,1.8,mat('#e2c58a'));
+
+  const light=new THREE.PointLight('#ffe0a6',2,10);
+  light.position.set(x,5.8,7);
+  scene.add(light);
+ }
+
+ for(let x of [-26.72,26.72]) {
+  const window=new THREE.Mesh(
+   new THREE.CircleGeometry(2.2,40),
+   new THREE.MeshBasicMaterial({color:'#193b56'})
+  );
+  window.position.set(x,4,-1);
+  window.rotation.y=x<0?Math.PI/2:-Math.PI/2;
+  scene.add(window);
+ }
+
+ makeStation('solar',-18,-15,'SOLAR POWER','Solar electricity is supplied by the roof panels and stored in the battery.');
+ makeStation('water',-9,-15,'WATER PROCESSING','The water system collects, extracts, condenses and purifies water.');
+ makeStation('oxygen',0,-15,'OXYGEN PRODUCTION','The reactor separates oxygen from lunar minerals.');
+ makeStation('habitat',9,-15,'CREW HABITAT','The habitat provides a protected pressurised living space.');
+ makeStation('farm',18,-15,'CULTIVATION','The cultivation bay supports plant growth and irrigation.');
+
+ for(let x of [-18,-9,0,9,18]) {
+  const pipe=cylinder(scene,x,6.8,-5,.12,18,mat('#3d9db7',.3,.5));
+  pipe.rotation.x=Math.PI/2;
+ }
+
+ const aisleX={solar:-19,water:-10,oxygen:0,habitat:10,farm:19};
+
+ for(const [key,x] of Object.entries(aisleX)) {
+  const sign=makeLabel(key.toUpperCase()+' STORAGE');
+  sign.position.set(x,6.2,17);
+  sign.scale.set(4,.65,1);
+  scene.add(sign);
+ }
+
+ specifications.forEach(([type,group,name,x,z,section])=>{
+  const mesh=makeEquipment(type);
+  mesh.position.set(x,1.1,z);
+  scene.add(mesh);
+
+  const board=makeLabel(name);
+  board.position.set(0,-1.1,0);
+  mesh.add(board);
+
+  parts.push({type,group,name,mesh,section,placed:false,collected:false});
+ });
+
+ player=new THREE.Group();
+ player.position.set(0,0,16);
+ scene.add(player);
+ player.add(camera);
+ camera.position.set(0,1.65,0);
+
+ const gloves=mat(suitColor,.5,.1);
+
+ for(const x of [-.35,.35]) {
+  const glove=new THREE.Mesh(new THREE.SphereGeometry(.15),gloves);
+  glove.position.set(x,-.38,-.7);
+  glove.scale.set(1,.7,1.2);
+  camera.add(glove);
+ }
+
+ clock=new THREE.Clock();
+}
+
+function connectPart(site,part,index) {
+ if(part.group==='habitat') {
+  part.mesh.parent=scene;
+  part.mesh.scale.setScalar(1);
+
+  if(part.type==='pressure_shell') {
+   const sealMat=mat('#7daab2',.4,.35);
+
+   for(const x of [-26.55,26.55]) {
+    box(scene,x,4,-4,.18,7.7,52,sealMat);
+   }
+
+   for(const z of [-30.55,22.55])
+    box(scene,0,4,z,52,.18,.18,sealMat);
+
+   box(scene,0,7.52,-4,52,.12,52,sealMat);
+   part.mesh.position.set(0,1,-4);
+
+  } else if(part.type==='regolith_shield') {
+   // Four-sided radiation protection. Every segment uses double-sided materials
+   // and layered geometry so it remains visible from inside and outside.
+   part.mesh.visible=false;
+
+   const bermMat=new THREE.MeshStandardMaterial({
+    color:'#81755e',
+    roughness:1,
+    metalness:0,
+    side:THREE.DoubleSide
+   });
+
+   const capMat=new THREE.MeshStandardMaterial({
+    color:'#b2a17c',
+    roughness:.94,
+    metalness:0,
+    side:THREE.DoubleSide
+   });
+
+   const edgeMat=new THREE.MeshStandardMaterial({
+    color:'#5d6666',
+    roughness:.82,
+    metalness:.12,
+    side:THREE.DoubleSide
+   });
+
+   const makeBerm=(x,y,z,w,h,d)=>{
+    const body=box(scene,x,y,z,w,h,d,bermMat);
+    body.material.side=THREE.DoubleSide;
+
+    const cap=box(scene,x,y+h/2+.08,z,w+.16,.16,d+.16,capMat);
+    cap.material.side=THREE.DoubleSide;
+
+    const footing=box(scene,x,.18,z,w+.5,.32,d+.5,edgeMat);
+    footing.material.side=THREE.DoubleSide;
+
+    return body;
+   };
+
+   // Side berms are broken into overlapping transportable sections.
+   for(const x of [-29.2,29.2]) {
+    for(let z=-27;z<=19;z+=9.2) {
+     makeBerm(x,1.45,z,4.8,2.9,9.6);
+
+     for(const xx of [x-2.15,x+2.15])
+      box(scene,xx,1.1,z,.16,1.9,.22,edgeMat);
+    }
+   }
+
+   // Front and rear runs complete the four-direction shield perimeter.
+   for(const z of [25.2,-33.2]) {
+    for(let x=-24;x<=24;x+=9.6) {
+     makeBerm(x,1.45,z,9.8,2.9,4.8);
+
+     for(const zz of [z-2.15,z+2.15])
+      box(scene,x,1.1,zz,.22,1.9,.16,edgeMat);
+    }
+   }
+
+   // Corner returns visibly join the four runs instead of leaving gaps.
+   for(const x of [-29.2,29.2]) {
+    for(const z of [-33.2,25.2])
+     makeBerm(x,1.35,z,5.1,2.7,5.1);
+   }
+
+   return;
+
+  } else if(part.type==='eclss') {
+   part.mesh.position.set(0,1,-4);
+   const ductMat=mat('#58a8b8',.35,.45);
+
+   for(const x of [-18,-9,0,9,18]) {
+    const duct=box(scene,x,6.9,-4,.22,.22,42,ductMat);
+    duct.position.z=-4;
+
+    for(const z of [-22,-10,2,14])
+     box(scene,x,6.9,z,1.2,.22,.22,ductMat);
+   }
+
+   for(const z of [-24,16])
+    box(scene,0,6.9,z,40,.22,.22,ductMat);
+  }
+
+  return;
+ }
+
+ if(part.type==='panel') {
+  // Solar panel remains outside on the roof.
+  part.mesh.parent=scene;
+  part.mesh.position.set(10,8.78,17.15);
+  part.mesh.scale.setScalar(1.5);
+
+ } else {
+  part.mesh.parent=site.g;
+  part.mesh.position.set(-2.5+(index%3)*2.5,.55,-1);
+  part.mesh.rotation.set(0,0,0);
+  part.mesh.scale.setScalar(.9);
+ }
+
+ const points=[
+  new THREE.Vector3(
+   part.type==='panel'?10:part.mesh.position.x,
+   part.type==='panel'?8.78:part.mesh.position.y+.3,
+   part.type==='panel'?17.15:part.mesh.position.z
+  ),
+  new THREE.Vector3(site.x,.7,site.z-3.2)
+ ];
+
+ const curve=new THREE.CatmullRomCurve3(points);
+
+ const tube=new THREE.Mesh(
+  new THREE.TubeGeometry(curve,25,.05,8,false),
+  mat('#39b5b7',.25,.5)
+ );
+
+ if(part.type==='panel') scene.add(tube);
+ else site.g.add(tube);
+}
+
+function updateTasks() {
+ $('tasks').innerHTML=Object.entries(groupSizes).map(([key,size])=>{
+  const count=parts.filter(p=>p.group===key&&p.placed).length;
+
+  return `<div style="color:${completed.has(key)?'#91e9b7':'#dce9ed'}">
+   ${completed.has(key)?'✓':'○'} ${groupNames[key]}: ${completed.has(key)?'ONLINE':count+'/'+size}
+  </div>`;
+ }).join('');
+}
+
+function equipmentLibrary() {
+ const list=$('equipmentList');
+ list.innerHTML='';
+
+ for(const part of parts) {
+  const button=document.createElement('button');
+  button.textContent=part.name;
+
+  button.onclick=()=>{
+   $('guideTitle').textContent=explanations[part.type][0];
+   $('guideText').textContent=explanations[part.type][1];
+  };
+
+  list.appendChild(button);
+ }
+}
+
+function nearestPart() {
+ let result=null;
+ let distance=3.7;
+
+ for(const part of parts) {
+  if(part.placed||part.collected) continue;
+
+  const d=player.position.distanceTo(part.mesh.position);
+
+  if(d<distance) {
+   distance=d;
+   result=part;
+  }
+ }
+
+ return result;
+}
+
+function message(text) {
+ $('prompt').textContent=text;
+}
+
+function interact() {
+ if(held) {
+  let site=sites.find(s=>
+   s.group===held.group &&
+   !s.built &&
+   Math.hypot(player.position.x-s.x,player.position.z-s.z)<6.5
+  );
+
+  // The pressure envelope and ECLSS are outpost-wide systems.
+  // One E press near the front entrance deploys radiation protection on all four sides.
+  if(held.type==='regolith_shield') {
+   const nearEntrance=
+    Math.abs(player.position.x)<8 &&
+    player.position.z>18 &&
+    player.position.z<32 &&
+    playerLevel==='ground';
+
+   if(!nearEntrance) {
+    message('Bring the radiation-shield package to the front entrance area and press E.');
+    return;
+   }
+
+   site=sites.find(s=>s.group==='habitat'&&!s.built);
+
+  } else if(
+   held.group==='habitat' &&
+   Math.abs(player.position.x)<26 &&
+   player.position.z>-30 &&
+   player.position.z<22
+  ) {
+   site=sites.find(s=>s.group==='habitat'&&!s.built);
+  }
+
+  // The solar array must be carried up the front staircase and placed on the mounting cradle immediately beside the stair landing.
+  if(held.type==='panel') {
+   const onRoof=playerLevel==='roof' && player.position.y>7.5;
+   const nearRoofArray=Math.hypot(
+    player.position.x-10,
+    player.position.z-17.15
+   )<4.8;
+
+   if(!onRoof||!nearRoofArray) {
+    message('Carry the solar array up the front staircase. Its mounting point is just ahead of the staircase on the roof.');
+    return;
+   }
+
+   site=sites.find(s=>s.group==='solar'&&!s.built);
+  }
+
+  if(!site) {
+   message('Take this component to its matching assembly bay.');
+   return;
+  }
+
+  const index=parts.filter(p=>p.group===held.group&&p.placed).length;
+  const part=held;
+
+  connectPart(site,part,index);
+
+  part.placed=true;
+  part.collected=false;
+  held=null;
+
+  const count=parts.filter(p=>p.group===part.group&&p.placed).length;
+
+  message(`${groupNames[part.group]} component installed: ${count}/${groupSizes[part.group]}`);
+
+  if(count===groupSizes[part.group]) {
+   completed.add(part.group);
+   site.built=true;
+   site.ring.material.opacity=.8;
+   site.beacon.material.color.set('#72ffb0');
+   site.spine.material=mat('#4fd9a5',.25,.5);
+   message(`${groupNames[part.group]} is now ONLINE!`);
+  }
+
+  updateTasks();
+
+  if(completed.size===5) {
+   setTimeout(showCertificate,800);
+  }
+
+  return;
+ }
+
+ const part=nearestPart();
+
+ if(part) {
+  held=part;
+  part.collected=true;
+  part.mesh.parent=camera;
+  part.mesh.position.set(0,-.2,-1.55);
+  part.mesh.rotation.set(.2,0,0);
+  part.mesh.scale.setScalar(.55);
+
+  $('guideTitle').textContent=explanations[part.type][0];
+  $('guideText').textContent=explanations[part.type][1];
+
+  message('Carry the equipment to its matching assembly bay.');
+ }
+}
+
+function dropPart() {
+ if(!held)return;
+
+ const part=held;
+ held=null;
+ part.collected=false;
+ part.mesh.parent=scene;
+
+ part.mesh.position.copy(player.position).add(
+  new THREE.Vector3(
+   Math.sin(yaw)*1.5,
+   .4,
+   -Math.cos(yaw)*1.5
+  )
+ );
+
+ part.mesh.scale.setScalar(1);
+ part.mesh.rotation.set(0,0,0);
+
+ message('Equipment dropped. Walk near it and press E to pick it up again.');
+}
+
+function showCertificate() {
+ paused=true;
+ document.exitPointerLock?.();
+
+ $('hud').classList.add('hidden');
+ $('overlay').classList.remove('hidden');
+
+ document.querySelectorAll('#overlay .modal').forEach(el=>el.classList.add('hidden'));
+ $('certificate').classList.remove('hidden');
+
+ $('certName').textContent=astronaut;
+}
+
+function pauseGame() {
+ if(!started||paused)return;
+
+ paused=true;
+ document.exitPointerLock?.();
+
+ $('overlay').classList.remove('hidden');
+ $('pause').classList.remove('hidden');
+}
+
+function resumeGame() {
+ paused=false;
+ $('overlay').classList.add('hidden');
+ renderer.domElement.requestPointerLock?.();
+}
+
+function exitGame() {
+ paused=true;
+ document.exitPointerLock?.();
+
+ $('pause').classList.add('hidden');
+ $('goodbye').classList.remove('hidden');
+}
+
+function animate() {
+ if(!started)return;
+
+ requestAnimationFrame(animate);
+
+ const dt=Math.min(clock.getDelta(),.04);
+
+ if(!paused) {
+  const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
+  const right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
+  const movement=new THREE.Vector3();
+
+  if(keys.KeyW)movement.add(forward);
+  if(keys.KeyS)movement.sub(forward);
+  if(keys.KeyD)movement.add(right);
+  if(keys.KeyA)movement.sub(right);
+
+  if(movement.lengthSq()) {
+   movement.normalize().multiplyScalar(dt*5);
+   player.position.add(movement);
+   energy-=dt*.12;
+  }
+
+  // Broad lunar-surface freedom outside the outpost.
+  // The staircase is a continuous two-way path: height is derived from the
+  // player's position along it, not from a one-way trigger or a jump.
+  const stairXMin=5.25;
+  const stairXMax=14.75;
+  const stairStartZ=20.5;
+  const stairEndZ=40.0;
+
+  const onStairCorridor=
+   player.position.x>=stairXMin &&
+   player.position.x<=stairXMax &&
+   player.position.z>=stairStartZ &&
+   player.position.z<=stairEndZ;
+
+  if(playerLevel==='ground') {
+   player.position.x=THREE.MathUtils.clamp(player.position.x,-120,120);
+   player.position.z=THREE.MathUtils.clamp(player.position.z,-120,120);
+
+   if(onStairCorridor) {
+    const progress=THREE.MathUtils.clamp(
+     (player.position.z-stairStartZ)/(stairEndZ-stairStartZ),
+     0,
+     1
+    );
+
+    player.position.y=8.35*(1-progress);
+
+    if(progress<=.025) {
+     playerLevel='roof';
+     roofAccess=true;
+     player.position.y=8.35;
+    }
+
+   } else {
+    player.position.y=0;
+    roofAccess=false;
+   }
+
+  } else {
+   // On the roof, allow movement into the stair corridor; once there,
+   // keep following its slope all the way to ground level.
+   const insideStairWidth=
+    player.position.x>=stairXMin &&
+    player.position.x<=stairXMax;
+
+   if(insideStairWidth && player.position.z>=stairStartZ-.35) {
+    player.position.z=THREE.MathUtils.clamp(
+     player.position.z,
+     stairStartZ-.35,
+     stairEndZ+.25
+    );
+
+    const progress=THREE.MathUtils.clamp(
+     (player.position.z-stairStartZ)/(stairEndZ-stairStartZ),
+     0,
+     1
+    );
+
+    player.position.y=8.35*(1-progress);
+
+    if(progress>=.985) {
+     playerLevel='ground';
+     roofAccess=false;
+     player.position.y=0;
+     player.position.z=stairEndZ+.05;
+    }
+
+   } else {
+    // Clamp the roof edge but never reset the player to ground level.
+    player.position.x=THREE.MathUtils.clamp(player.position.x,-25.5,25.5);
+    player.position.z=THREE.MathUtils.clamp(
+     player.position.z,
+     -29.5,
+     stairStartZ-.4
+    );
+    player.position.y=8.35;
+    roofAccess=true;
+   }
+  }
+
+  if(keys.ArrowLeft)yaw+=dt*1.5;
+  if(keys.ArrowRight)yaw-=dt*1.5;
+
+  camera.position.y=1.65;
+  camera.rotation.order='YXZ';
+  camera.rotation.y=yaw;
+  camera.rotation.x=pitch;
+
+  if(held) {
+   held.mesh.position.set(0,-.2,-1.6);
+   held.mesh.rotation.y=Math.sin(performance.now()*.001)*.07;
+  }
+
+  if(door) {
+   const near=Math.abs(player.position.x)<4.5&&player.position.z>17;
+   door.position.x=near?6.5:0;
+  }
+
+  energy-=dt*.025;
+
+  if(completed.has('solar'))
+   energy=Math.min(100,energy+dt*.4);
+
+  energy=Math.max(0,energy);
+
+  if(energy===0)pauseGame();
+
+  $('energy').textContent=Math.floor(energy)+'%';
+  $('energyFill').style.width=energy+'%';
+  $('carrying').textContent=held?held.name.toUpperCase():'NOTHING';
+
+  const part=nearestPart();
+
+  if(held) {
+   message('Carry your equipment to the matching assembly bay. Press Q to drop.');
+
+  } else if(player.position.y>7.5) {
+   message('You are on the roof. Carry the solar array to its marked installation area.');
+
+  } else if(part) {
+   message('Press E to collect: '+part.name);
+
+  } else {
+   message('Explore the outpost and assemble the five settlement systems.');
+  }
+ }
+
+ renderer.render(scene,camera);
+}
+
+function startGame() {
+ astronaut=$('pilotName').value.trim()||'Pioneer';
+ started=true;
+ paused=false;
+
+ buildWorld();
+
+ $('pilotLabel').textContent=astronaut.toUpperCase();
+ $('welcome').classList.add('hidden');
+ $('briefing').classList.add('hidden');
+ $('overlay').classList.add('hidden');
+ $('hud').classList.remove('hidden');
+
+ updateTasks();
+ equipmentLibrary();
+
+ renderer.domElement.addEventListener('click',()=>{
+  if(!paused&&!document.pointerLockElement)
+   renderer.domElement.requestPointerLock();
+ });
+
+ animate();
+}
+
+const slides=[
+ ['Welcome to the Moon','Welcome, trainee! I am your mission mentor. Your task is to build a small lunar settlement. We will collect equipment, understand its purpose and install it in the correct assembly bay.'],
+ ['Solar power','The photovoltaic panels are mounted on the roof. They collect sunlight and turn it into electricity. The battery stores electricity, and cables distribute it to the outpost.'],
+ ['Water production','The auger drills into lunar soil. The thermal extraction unit heats the collected material. The condenser cools the vapour into water, and the purifier cleans it.'],
+ ['Oxygen production','The feed hopper supplies lunar soil to the electrolysis reactor. The reactor uses heat and electricity to separate oxygen from minerals. The oxygen tank stores the gas.'],
+ ['Outpost protection and life support','The pressure envelope seals the entire occupied outpost. Radiation shielding is distributed around the perimeter and roof, while the environmental-control and life-support network circulates and conditions air throughout the modules.'],
+ ['Growing food','Growth beds hold the plants. The nutrient tank stores plant food, the LED lights help plants grow, the pump moves water and the seedling tray protects young plants.'],
+ ['Look around!','WASD moves you, the mouse looks around, E collects or installs equipment, Q drops it and ESC pauses. Walk out through the front entrance and use the wide staircase immediately beside it. The astronaut follows the stair slope in both directions. Walk forward to climb and reverse direction to descend; stay between the handrails. Carry the solar array to the rooftop mounting cradle immediately beside the top of the staircase. For radiation protection, carry one shield package to the front entrance area and press E once. It automatically deploys protection on all four sides.']
+];
+
+function showSlide() {
+ const slide=slides[briefingIndex];
+
+ $('slideCount').textContent=`BRIEFING ${briefingIndex+1} / ${slides.length}`;
+ $('slideTitle').textContent=slide[0];
+ $('slidebody').textContent=slide[1];
+
+ $('previousSlide').disabled=briefingIndex===0;
+ $('nextSlide').textContent=briefingIndex===slides.length-1?'BEGIN TRAINING':'NEXT';
+}
+
+$('colors').onclick=e=>{
+ if(!e.target.dataset.color)return;
+
+ document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
+ e.target.classList.add('selected');
+ suitColor=e.target.dataset.color;
+};
+
+$('beginBriefing').onclick=()=>{
+ $('welcome').classList.add('hidden');
+ $('briefing').classList.remove('hidden');
+ briefingIndex=0;
+ showSlide();
+};
+
+$('previousSlide').onclick=()=>{
+ if(briefingIndex>0)briefingIndex--;
+ showSlide();
+};
+
+$('nextSlide').onclick=()=>{
+ if(briefingIndex<slides.length-1) {
+  briefingIndex++;
+  showSlide();
+ } else {
+  startGame();
+ }
+};
+
+$('exit').onclick=pauseGame;
+$('resume').onclick=resumeGame;
+$('quit').onclick=exitGame;
+$('restart').onclick=()=>location.reload();
+
+addEventListener('keydown',e=>{
+ if(e.code==='Escape') {
+  if(!paused)pauseGame();
+  return;
+ }
+
+ keys[e.code]=true;
+
+ if(e.code==='KeyE'&&!paused)interact();
+ if(e.code==='KeyQ'&&!paused)dropPart();
+});
+
+addEventListener('keyup',e=>keys[e.code]=false);
+
+addEventListener('mousemove',e=>{
+ if(document.pointerLockElement&&!paused) {
+  yaw-=e.movementX*.0012;
+  pitch=THREE.MathUtils.clamp(pitch-e.movementY*.0012,-1.25,1.25);
+ }
+});
+
+addEventListener('resize',()=>{
+ if(camera&&renderer) {
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+ }
+});
+</script>
+</body>
+</html>
