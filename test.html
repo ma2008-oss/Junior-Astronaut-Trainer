@@ -85,9 +85,42 @@ input{width:100%;padding:11px;border-radius:8px;border:1px solid #547889;backgro
  #lookHint{bottom:72px}
 }
 </style>
+<style>
+/* Responsive game cabinet: the lunar world stays inside a landscape 16:9 frame. */
+body{min-height:100dvh;display:grid;place-items:center;background:radial-gradient(ellipse at center,#203746 0%,#071522 72%)}
+#gameShell{position:relative;width:min(1100px,96vw,calc((100dvh - 24px)*1.7777778));aspect-ratio:16/9;max-height:calc(100dvh - 24px);border:2px solid #7097a5;border-radius:14px;overflow:hidden;background:#030a13;box-shadow:0 18px 60px #000b}
+#gameViewport{position:absolute;inset:0;overflow:hidden}
+#gameViewport canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#hud{position:absolute;inset:0;z-index:5;pointer-events:none}
+#overlay{z-index:20}
+#mobileControls{display:block}
+#joystick{z-index:8;touch-action:none}
+#touchActions{z-index:8}
+#lookHint{z-index:7;pointer-events:none}
+#inventory,#exit{pointer-events:auto}
+@media(max-width:900px), (pointer:coarse){
+ #gameShell{width:min(98vw,calc((100dvh - 12px)*1.7777778));max-height:calc(100dvh - 12px);border-radius:9px}
+ #mobileControls{display:block}
+ #joystick{width:clamp(82px,14vw,112px);height:clamp(82px,14vw,112px);bottom:10px;left:10px}
+ #joystickStick{width:40px;height:40px}
+ #touchActions{right:10px;bottom:10px;gap:6px}
+ #touchActions button{min-width:60px;min-height:46px;font-size:10px;padding:5px}
+ #lookHint{right:8px;bottom:64px;font-size:10px}
+ #inventory{left:8px;top:8px;bottom:auto;width:clamp(145px,24vw,205px);max-height:34%;padding:6px}
+ #mission{right:8px;top:8px;width:clamp(145px,24vw,205px);max-height:34%;overflow:auto;padding:6px}
+ #stats{left:50%;top:8px;transform:translateX(-50%);min-width:110px;font-size:11px;padding:6px}
+ #exit{top:auto;right:8px;bottom:68px;font-size:10px;padding:6px}
+ #prompt{bottom:58px;max-width:42%;font-size:11px;padding:5px 9px}
+ #guide{display:none}
+}
+@media(orientation:portrait) and (max-width:900px){
+ #gameShell{width:min(96vw,calc((100dvh - 80px)*1.7777778))}
+ #rotateNotice{display:grid}
+ body.playing #hud{visibility:hidden}
+}
+</style>
 </head>
 <body>
-
 <div id="overlay">
  <section class="modal" id="welcome">
   <div class="eyebrow">LUNAR EXPLORATION PROGRAM</div>
@@ -99,98 +132,38 @@ input{width:100%;padding:11px;border-radius:8px;border:1px solid #547889;backgro
    <i class="swatch selected" data-color="#36a9e8" style="background:#36a9e8"></i><i class="swatch" data-color="#e6a23c" style="background:#e6a23c"></i><i class="swatch" data-color="#d96b87" style="background:#d96b87"></i><i class="swatch" data-color="#8b79df" style="background:#8b79df"></i><i class="swatch" data-color="#72b78a" style="background:#72b78a"></i>
   </div>
   <button id="startBriefing">MEET YOUR MISSION MENTOR</button>
-  <p style="font-size:15px">Mobile: use the joystick to move, drag the open screen to look around, and tap PICK / INSTALL or DROP. Desktop: WASD + mouse, E to pick/install, Q to drop, ESC to pause.</p>
+  <p style="font-size:15px">Mobile: rotate to landscape. The lunar world stays inside a 16:9 game frame. Use the on-screen joystick to move, drag the 3D view to look around, and tap PICK / INSTALL or DROP. Desktop: WASD + mouse, E to pick/install, Q to drop, ESC to pause.</p>
  </section>
-
  <section class="modal hidden" id="briefing">
   <div class="eyebrow">MISSION BRIEFING · KALPANA</div><h1 id="slideTitle">WELCOME TO THE MOON</h1><div id="briefingText"></div>
   <button class="secondary" id="backSlide">BACK</button> <button id="nextSlide">NEXT</button>
  </section>
-
  <section class="modal hidden" id="pause">
   <div class="eyebrow">MISSION CONTROL</div><h1>MISSION PAUSED</h1><p>Your lunar mission is waiting.</p><button id="resume">RESUME MISSION</button> <button class="secondary" id="quit">EXIT TRAINING</button>
  </section>
-
  <section class="modal hidden" id="certificate">
   <div class="eyebrow">LUNAR EXPLORATION PROGRAM</div><h1>MISSION COMPLETED</h1><p>This certificate is proudly presented to</p><div id="certName">Pioneer</div><hr><h1>CERTIFIED JUNIOR ASTRONAUT</h1><p>You brought all five lunar settlement systems online.</p><p style="color:#f2d99d">POWER · WATER · OXYGEN · HABITAT · CULTIVATION</p><button id="restart">PLAY AGAIN</button>
  </section>
-
  <section class="modal hidden" id="goodbye"><h1>MISSION CLOSED</h1><p>Thank you for exploring the lunar outpost.</p><button onclick="location.reload()">RETURN HOME</button></section>
 </div>
-
-<div id="rotateNotice">
- <div>
-  <div class="phone">📱 ↻</div>
-  <h2>Rotate your phone</h2>
-  <p>Please switch to <b>landscape mode</b> for the best view and gaming experience.</p>
-  <p>Then return to the game.</p>
- </div>
-</div>
-
-<div id="hud" class="hidden">
- <div id="top">
-  <div class="panel" id="brand">JUNIOR ASTRONAUT TRAINER</div>
-  <div class="panel" id="stats">
-   <b id="pilotLabel">PIONEER</b><br>
-   ENERGY <span id="energy">100</span>%
-   <div style="height:5px;background:#20394b;border-radius:5px">
-    <div id="energyFill" style="height:5px;width:100%;background:#65d8ad;border-radius:5px"></div>
-   </div>
-   CARRYING <b id="carrying">NOTHING</b>
-  </div>
- </div>
-
+<div id="rotateNotice"><div><div class="phone">📱 ↻</div><h2>Rotate your phone</h2><p>Please switch to <b>landscape mode</b> for the best view and gaming experience.</p><p>Then return to the game.</p></div></div>
+<main id="gameShell"><div id="gameViewport"></div><div id="hud" class="hidden">
+ <div id="top"><div class="panel" id="brand">JUNIOR ASTRONAUT TRAINER</div><div class="panel" id="stats"><b id="pilotLabel">PIONEER</b><br>ENERGY <span id="energy">100</span>%<div style="height:5px;background:#20394b;border-radius:5px"><div id="energyFill" style="height:5px;width:100%;background:#65d8ad;border-radius:5px"></div></div>CARRYING <b id="carrying">NOTHING</b></div></div>
  <div class="panel" id="mission"><b>MISSION OBJECTIVES</b><div id="tasks"></div></div>
-
- <div class="panel" id="inventory">
-  <b>EQUIPMENT INVENTORY</b>
-  <div style="font-size:12px;color:#bed1d8">Tap an item to select it. Select an item, then PICK it up nearby.</div>
-  <div id="equipmentList"></div>
- </div>
-
- <div class="panel" id="guide">
-  <b id="guideTitle">FIELD GUIDE</b>
-  <div id="guideText">Select equipment to learn about it.</div>
- </div>
-
- <button id="exit">PAUSE</button>
- <div id="prompt">Explore the lunar outpost</div>
-
- <div id="mobileControls">
-  <div id="joystick">
-   <div id="joystickBase"><div id="joystickStick"></div></div>
-   <div id="joyLabel">MOVE</div>
-  </div>
-  <div id="lookHint">DRAG OPEN SCREEN TO LOOK</div>
-  <div id="touchActions">
-   <button id="touchUse">PICK / INSTALL</button>
-   <button id="touchDrop" class="secondary">DROP</button>
-  </div>
- </div>
-</div>
-
-<script type="importmap">
-{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
-</script>
-
+ <div class="panel" id="inventory"><b>EQUIPMENT INVENTORY</b><div style="font-size:12px;color:#bed1d8">Tap an item to select it. Select an item, then PICK it up nearby.</div><div id="equipmentList"></div></div>
+ <div class="panel" id="guide"><b id="guideTitle">FIELD GUIDE</b><div id="guideText">Select equipment to learn about it.</div></div>
+ <button id="exit">PAUSE</button><div id="prompt">Explore the lunar outpost</div>
+ <div id="mobileControls"><div id="joystick"><div id="joystickBase"><div id="joystickStick"></div></div><div id="joyLabel">MOVE</div></div><div id="lookHint">DRAG OPEN SCREEN TO LOOK</div><div id="touchActions"><button id="touchUse">PICK / INSTALL</button><button id="touchDrop" class="secondary">DROP</button></div></div>
+</div></main>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
-
 const $=id=>document.getElementById(id);
-const touch=matchMedia('(pointer:coarse)').matches;
-
+const touch=matchMedia('(pointer:coarse)').matches || ('ontouchstart' in window) || navigator.maxTouchPoints>0;
 let scene,camera,renderer,clock,player,yaw=0,pitch=0,energy=100,paused=true,started=false;
 let keys={},joyX=0,joyY=0,joyPointer=null,lookPointer=null,lastX=0,lastY=0;
 let parts=[],stations=[],selected=null,held=null,completed=new Set(),suitColor='#36a9e8',pilot='Pioneer',slide=0;
-
-const groups={
- solar:'Solar Power',
- water:'Water Processing',
- oxygen:'Oxygen Production',
- habitat:'Crew Habitat',
- farm:'Cultivation'
-};
-
+const groups={solar:'Solar Power',water:'Water Processing',oxygen:'Oxygen Production',habitat:'Crew Habitat',farm:'Cultivation'};
 const slides=[
  ['WELCOME TO THE MOON','Your mission is to establish a working lunar settlement. Explore the outpost and learn how astronauts could use local resources to support life.'],
  ['SOLAR POWER','Solar panels collect sunlight and convert it into electrical energy. Batteries store electricity for periods when sunlight is unavailable.'],
@@ -200,7 +173,6 @@ const slides=[
  ['CULTIVATION','Plant growth beds, nutrient supplies, irrigation and LED lights can support controlled food cultivation.'],
  ['YOUR MISSION','Select equipment in the inventory, collect it from the outpost, and deliver it to the matching assembly station. Complete all five systems.']
 ];
-
 const defs=[
  ['panel','solar','Solar array',-19,10,'Converts sunlight into electricity.'],
  ['battery','solar','Battery unit',-19,4,'Stores electricity for use when sunlight is unavailable.'],
@@ -221,849 +193,148 @@ const defs=[
  ['pump','farm','Irrigation pump',19,-8,'Moves water and nutrients to the growing beds.'],
  ['seedlings','farm','Seedling tray',19,-14,'Holds young plants as they begin growing.']
 ];
-
 const counts={solar:3,water:4,oxygen:3,habitat:3,farm:5};
 const materials={};
-
-function mat(c,r=.6,m=0){
- return new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
-}
-
-function box(parent,x,y,z,w,h,d,m){
- const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
- o.position.set(x,y,z);
- o.castShadow=true;
- o.receiveShadow=true;
- parent.add(o);
- return o;
-}
-
-function cyl(parent,x,y,z,r,h,m){
- const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,20),m);
- o.position.set(x,y,z);
- o.castShadow=true;
- parent.add(o);
- return o;
-}
-
-function label(text){
- const c=document.createElement('canvas');
- c.width=512;
- c.height=100;
- const x=c.getContext('2d');
- x.fillStyle='#eaf4f5';
- x.fillRect(0,0,512,100);
- x.strokeStyle='#44889a';
- x.lineWidth=5;
- x.strokeRect(3,3,506,94);
- x.fillStyle='#244b5a';
- x.font='bold 29px Arial';
- x.textAlign='center';
- x.fillText(text.toUpperCase(),256,62);
- const t=new THREE.CanvasTexture(c);
- const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t}));
- s.scale.set(3.2,.63,1);
- return s;
-}
-
+function mat(c,r=.6,m=0){return new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m})}
+function box(parent,x,y,z,w,h,d,m){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
+function cyl(parent,x,y,z,r,h,m){const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,20),m);o.position.set(x,y,z);o.castShadow=true;parent.add(o);return o}
+function label(text){const c=document.createElement('canvas');c.width=512;c.height=100;const x=c.getContext('2d');x.fillStyle='#eaf4f5';x.fillRect(0,0,512,100);x.strokeStyle='#44889a';x.lineWidth=5;x.strokeRect(3,3,506,94);x.fillStyle='#244b5a';x.font='bold 29px Arial';x.textAlign='center';x.fillText(text.toUpperCase(),256,62);const t=new THREE.CanvasTexture(c);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t}));s.scale.set(3.2,.63,1);return s}
 function makeModel(type){
- const g=new THREE.Group();
- const steel=mat('#9aadb5',.35,.65);
- const dark=mat('#263d4a',.5,.4);
- const blue=mat('#347d9d',.3,.45);
- const gold=mat('#c6a05e',.4,.5);
- const white=mat('#dce7e7');
- const green=mat('#62a777');
-
- if(type==='panel'){
-  box(g,0,.1,0,1.5,.12,.95,dark);
-  for(let i=0;i<3;i++){
-   box(g,-.45+i*.45,.2,0,.42,.04,.83,blue);
-   for(let j=0;j<6;j++)
-    box(g,-.45+i*.45,.23,-.33+j*.13,.39,.012,.012,mat('#9bd9e7'));
-  }
-  for(let x of [-.55,.55])
-   box(g,x,-.12,0,.08,.32,.08,steel);
- }
-
- if(type==='battery'){
-  box(g,0,.35,0,1,.7,.7,dark);
-  box(g,0,.73,0,.7,.08,.5,steel);
-  for(let i=0;i<3;i++)
-   box(g,-.3+i*.3,.8,0,.1,.05,.15,gold);
- }
-
- if(type==='cable'){
-  box(g,0,.1,0,1,.18,.7,dark);
-  for(let i=0;i<3;i++){
-   const t=new THREE.Mesh(
-    new THREE.TorusGeometry(.22,.05,8,24),
-    mat(['#d8ad48','#55a9d4','#d56d68'][i])
-   );
-   t.position.set(-.3+i*.3,.3,0);
-   g.add(t);
-  }
- }
-
- if(type==='drill'){
-  box(g,0,.35,0,.8,.6,.7,steel);
-  cyl(g,0,-.1,0,.13,.45,gold);
- }
-
- if(type==='heater'){
-  box(g,0,.4,0,1,.75,.75,dark);
-  cyl(g,0,.85,0,.3,.15,steel);
-  box(g,0,.3,.4,.45,.3,.05,mat('#d96c42'));
- }
-
- if(type==='condenser'){
-  box(g,0,.35,0,1,.6,.65,steel);
-  for(let i=0;i<5;i++)
-   box(g,-.4+i*.2,.35,.36,.06,.65,.06,blue);
- }
-
- if(type==='purifier'){
-  cyl(g,0,.4,0,.38,.85,white);
-  cyl(g,0,.88,0,.4,.12,steel);
- }
-
- if(type==='feeder'){
-  box(g,0,.15,0,.85,.3,.7,steel);
-  cyl(g,0,.55,0,.3,.55,gold);
- }
-
- if(type==='reactor'){
-  cyl(g,0,.45,0,.44,.9,steel);
-  cyl(g,0,.95,0,.5,.14,gold);
-  for(let i=0;i<3;i++)
-   box(g,-.25+i*.25,.45,.42,.07,.3,.05,mat('#d76d44'));
- }
-
- if(type==='tank'){
-  cyl(g,0,.5,0,.38,1,white);
-  cyl(g,0,1.05,0,.2,.12,steel);
-  const band=new THREE.Mesh(new THREE.TorusGeometry(.385,.035,8,32),gold);
-  band.position.y=.5;
-  g.add(band);
- }
-
- if(type==='pressure'){
-  box(g,0,.42,0,1.25,.85,.18,white);
-  box(g,0,.42,.12,1.08,.68,.08,blue);
-  box(g,0,.92,0,1.35,.12,.28,steel);
- }
-
- if(type==='shield'){
-  box(g,0,.22,0,1.35,.42,.95,gold);
-  box(g,0,.47,0,1.25,.12,.85,mat('#8b8068'));
- }
-
- if(type==='eclss'){
-  box(g,0,.48,0,.95,.95,.72,white);
-  box(g,0,.5,.38,.65,.55,.06,blue);
-  for(let i=0;i<4;i++)
-   box(g,-.3+i*.2,.2,.4,.07,.18,.04,green);
- }
-
- if(type==='bed'){
-  box(g,0,.15,0,1.3,.3,.85,mat('#8e7453'));
-  for(let i=0;i<5;i++){
-   const leaf=new THREE.Mesh(new THREE.SphereGeometry(.12),green);
-   leaf.position.set(-.45+i*.22,.48,0);
-   leaf.scale.set(.7,1.5,.7);
-   g.add(leaf);
-  }
- }
-
- if(type==='nutrient'){
-  box(g,0,.3,0,.9,.6,.7,blue);
-  cyl(g,0,.68,0,.3,.12,steel);
- }
-
- if(type==='lights'){
-  box(g,0,.12,0,1.25,.12,.5,dark);
-  for(let i=0;i<5;i++)
-   box(g,-.48+i*.24,.02,0,.12,.04,.38,mat('#efaaaa'));
- }
-
- if(type==='pump'){
-  box(g,0,.3,0,.7,.55,.6,blue);
-  cyl(g,.4,.3,0,.14,.35,gold);
- }
-
- if(type==='seedlings'){
-  box(g,0,.15,0,1.1,.25,.7,white);
-  for(let i=0;i<4;i++){
-   cyl(g,-.3+i*.2,.35,0,.035,.25,green);
-   const leaf=new THREE.Mesh(new THREE.SphereGeometry(.12),green);
-   leaf.position.set(-.3+i*.2,.5,0);
-   g.add(leaf);
-  }
- }
-
- box(g,0,-.72,0,1.35,.08,1.05,dark);
- return g;
+ const g=new THREE.Group(),steel=mat('#9aadb5',.35,.65),dark=mat('#263d4a',.5,.4),blue=mat('#347d9d',.3,.45),gold=mat('#c6a05e',.4,.5),white=mat('#dce7e7'),green=mat('#62a777');
+ if(type==='panel'){box(g,0,.1,0,1.5,.12,.95,dark);for(let i=0;i<3;i++){box(g,-.45+i*.45,.2,0,.42,.04,.83,blue);for(let j=0;j<6;j++)box(g,-.45+i*.45,.23,-.33+j*.13,.39,.012,.012,mat('#9bd9e7'))}for(let x of [-.55,.55])box(g,x,-.12,0,.08,.32,.08,steel)}
+ if(type==='battery'){box(g,0,.35,0,1,.7,.7,dark);box(g,0,.73,0,.7,.08,.5,steel);for(let i=0;i<3;i++)box(g,-.3+i*.3,.8,0,.1,.05,.15,gold)}
+ if(type==='cable'){box(g,0,.1,0,1,.18,.7,dark);for(let i=0;i<3;i++){const t=new THREE.Mesh(new THREE.TorusGeometry(.22,.05,8,24),mat(['#d8ad48','#55a9d4','#d56d68'][i]));t.position.set(-.3+i*.3,.3,0);g.add(t)}}
+ if(type==='drill'){box(g,0,.35,0,.8,.6,.7,steel);cyl(g,0,-.1,0,.13,.45,gold)}
+ if(type==='heater'){box(g,0,.4,0,1,.75,.75,dark);cyl(g,0,.85,0,.3,.15,steel);box(g,0,.3,.4,.45,.3,.05,mat('#d96c42'))}
+ if(type==='condenser'){box(g,0,.35,0,1,.6,.65,steel);for(let i=0;i<5;i++)box(g,-.4+i*.2,.35,.36,.06,.65,.06,blue)}
+ if(type==='purifier'){cyl(g,0,.4,0,.38,.85,white);cyl(g,0,.88,0,.4,.12,steel)}
+ if(type==='feeder'){box(g,0,.15,0,.85,.3,.7,steel);cyl(g,0,.55,0,.3,.55,gold)}
+ if(type==='reactor'){cyl(g,0,.45,0,.44,.9,steel);cyl(g,0,.95,0,.5,.14,gold);for(let i=0;i<3;i++)box(g,-.25+i*.25,.45,.42,.07,.3,.05,mat('#d76d44'))}
+ if(type==='tank'){cyl(g,0,.5,0,.38,1,white);cyl(g,0,1.05,0,.2,.12,steel);const band=new THREE.Mesh(new THREE.TorusGeometry(.385,.035,8,32),gold);band.position.y=.5;g.add(band)}
+ if(type==='pressure'){box(g,0,.42,0,1.25,.85,.18,white);box(g,0,.42,.12,1.08,.68,.08,blue);box(g,0,.92,0,1.35,.12,.28,steel)}
+ if(type==='shield'){box(g,0,.22,0,1.35,.42,.95,gold);box(g,0,.47,0,1.25,.12,.85,mat('#8b8068'))}
+ if(type==='eclss'){box(g,0,.48,0,.95,.95,.72,white);box(g,0,.5,.38,.65,.55,.06,blue);for(let i=0;i<4;i++)box(g,-.3+i*.2,.2,.4,.07,.18,.04,green)}
+ if(type==='bed'){box(g,0,.15,0,1.3,.3,.85,mat('#8e7453'));for(let i=0;i<5;i++){const leaf=new THREE.Mesh(new THREE.SphereGeometry(.12),green);leaf.position.set(-.45+i*.22,.48,0);leaf.scale.set(.7,1.5,.7);g.add(leaf)}}
+ if(type==='nutrient'){box(g,0,.3,0,.9,.6,.7,blue);cyl(g,0,.68,0,.3,.12,steel)}
+ if(type==='lights'){box(g,0,.12,0,1.25,.12,.5,dark);for(let i=0;i<5;i++)box(g,-.48+i*.24,.02,0,.12,.04,.38,mat('#efaaaa'))}
+ if(type==='pump'){box(g,0,.3,0,.7,.55,.6,blue);cyl(g,.4,.3,0,.14,.35,gold)}
+ if(type==='seedlings'){box(g,0,.15,0,1.1,.25,.7,white);for(let i=0;i<4;i++){cyl(g,-.3+i*.2,.35,0,.035,.25,green);const leaf=new THREE.Mesh(new THREE.SphereGeometry(.12),green);leaf.position.set(-.3+i*.2,.5,0);g.add(leaf)}}
+ box(g,0,-.72,0,1.35,.08,1.05,dark);return g
 }
-
 function buildWorld(){
- scene=new THREE.Scene();
- scene.background=new THREE.Color('#030a13');
- scene.fog=new THREE.Fog('#29343e',85,190);
-
- camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.08,400);
-
- renderer=new THREE.WebGLRenderer({antialias:!touch});
- renderer.setSize(innerWidth,innerHeight);
- renderer.setPixelRatio(Math.min(devicePixelRatio,touch?1.5:2));
- renderer.shadowMap.enabled=true;
- renderer.shadowMap.type=THREE.PCFSoftShadowMap;
- renderer.outputColorSpace=THREE.SRGBColorSpace;
- renderer.toneMapping=THREE.ACESFilmicToneMapping;
- renderer.toneMappingExposure=1;
- document.body.prepend(renderer.domElement);
-
+ scene=new THREE.Scene();scene.background=new THREE.Color('#030a13');scene.fog=new THREE.Fog('#29343e',85,190);
+ const view=$('gameViewport');camera=new THREE.PerspectiveCamera(70,view.clientWidth/view.clientHeight,.08,400);
+ renderer=new THREE.WebGLRenderer({antialias:!touch});renderer.setSize(view.clientWidth,view.clientHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,touch?1.5:2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1;view.appendChild(renderer.domElement);
  scene.add(new THREE.HemisphereLight('#c5d3dc','#30363a',1));
-
- const sun=new THREE.DirectionalLight('#f1e5cb',2.5);
- sun.position.set(-35,55,30);
- sun.castShadow=true;
- sun.shadow.mapSize.set(2048,2048);
- sun.shadow.camera.left=-65;
- sun.shadow.camera.right=65;
- sun.shadow.camera.top=65;
- sun.shadow.camera.bottom=-65;
- scene.add(sun);
-
- const ground=new THREE.Mesh(
-  new THREE.PlaneGeometry(400,400),
-  mat('#77736c',1)
- );
- ground.rotation.x=-Math.PI/2;
- ground.position.y=-.12;
- ground.receiveShadow=true;
- scene.add(ground);
-
- for(let i=0;i<150;i++){
-  let r=.3+Math.random()*1.5;
-  let rock=new THREE.Mesh(
-   new THREE.DodecahedronGeometry(r,1),
-   mat('#646b70',1)
-  );
-  rock.position.set(
-   (Math.random()-.5)*150,
-   r*.3,
-   (Math.random()-.5)*160
-  );
-  rock.scale.y=.5;
-  scene.add(rock);
- }
-
- const earth=new THREE.Mesh(
-  new THREE.SphereGeometry(4,32,24),
-  mat('#286b9e',.8)
- );
- earth.position.set(-35,32,-90);
- scene.add(earth);
-
+ const sun=new THREE.DirectionalLight('#f1e5cb',2.5);sun.position.set(-35,55,30);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-65;sun.shadow.camera.right=65;sun.shadow.camera.top=65;sun.shadow.camera.bottom=-65;scene.add(sun);
+ const ground=new THREE.Mesh(new THREE.PlaneGeometry(400,400),mat('#77736c',1));ground.rotation.x=-Math.PI/2;ground.position.y=-.12;ground.receiveShadow=true;scene.add(ground);
+ for(let i=0;i<150;i++){let r=.3+Math.random()*1.5;let rock=new THREE.Mesh(new THREE.DodecahedronGeometry(r,1),mat('#646b70',1));rock.position.set((Math.random()-.5)*150,r*.3,(Math.random()-.5)*160);rock.scale.y=.5;scene.add(rock)}
+ const earth=new THREE.Mesh(new THREE.SphereGeometry(4,32,24),mat('#286b9e',.8));earth.position.set(-35,32,-90);scene.add(earth);
  // Main outpost structure and roof
  box(scene,0,0,-4,54,.3,54,mat('#8d9da0',.6,.15));
-
- const wall=mat('#a8b9bb',.5,.2);
- const trim=mat('#7199a4',.4,.3);
-
- for(const x of [-27,27])
-  box(scene,x,4,-4,.5,8,54,wall);
-
- box(scene,0,4,-31,54,8,.5,wall);
- box(scene,-17,4,23,20,8,.5,wall);
- box(scene,17,4,23,20,8,.5,wall);
- box(scene,0,7.8,23,14,.4,.5,trim);
- box(scene,0,3.5,22.7,5.8,7,.3,mat('#6a9ba8',.4,.25));
+ const wall=mat('#a8b9bb',.5,.2),trim=mat('#7199a4',.4,.3);
+ for(const x of [-27,27])box(scene,x,4,-4,.5,8,54,wall);
+ box(scene,0,4,-31,54,8,.5,wall);box(scene,-17,4,23,20,8,.5,wall);box(scene,17,4,23,20,8,.5,wall);
+ box(scene,0,7.8,23,14,.4,.5,trim);box(scene,0,3.5,22.7,5.8,7,.3,mat('#6a9ba8',.4,.25));
  box(scene,0,8,-4,54,.55,54,mat('#657b86',.55,.35));
-
  // Front access ramp
- const angle=Math.atan(8.35/19.5);
- const ramp=box(scene,10,4.12,30.25,7.8,.62,19.5,mat('#687b83',.72,.22));
- ramp.rotation.x=angle;
-
- for(let i=0;i<13;i++)
-  box(scene,10,.35+i*.64,39.4-i*1.48,7.35,.12,.18,mat('#aab5b6',.72,.18));
-
- for(let x of [5.75,14.25]){
-  const rail=box(scene,x,4.55,30.25,.16,.16,19.5,mat('#9eafb5',.32,.72));
-  rail.rotation.x=angle;
- }
-
+ const angle=Math.atan(8.35/19.5),ramp=box(scene,10,4.12,30.25,7.8,.62,19.5,mat('#687b83',.72,.22));ramp.rotation.x=angle;
+ for(let i=0;i<13;i++)box(scene,10,.35+i*.64,39.4-i*1.48,7.35,.12,.18,mat('#aab5b6',.72,.18));
+ for(let x of [5.75,14.25]){const rail=box(scene,x,4.55,30.25,.16,.16,19.5,mat('#9eafb5',.32,.72));rail.rotation.x=angle}
  box(scene,10,8.39,19.15,9,.24,5.2,mat('#87989b',.62,.3));
-
- for(let x of [-21,-13,-5,3,19])
-  box(scene,x,8.38,-8,6.3,.15,8,mat('#225778',.2,.55));
-
+ for(let x of [-21,-13,-5,3,19]){box(scene,x,8.38,-8,6.3,.15,8,mat('#225778',.2,.55))}
  const positions=[[-18,-15],[-9,-15],[0,-15],[9,-15],[18,-15]];
-
- positions.forEach(([x,z],i)=>{
-  const pad=new THREE.Mesh(
-   new THREE.CylinderGeometry(4.5,4.5,.15,36),
-   mat('#8b9da1',.6,.2)
-  );
-  pad.position.set(x,.02,z);
-  scene.add(pad);
-
-  const ring=new THREE.Mesh(
-   new THREE.TorusGeometry(4.5,.08,8,48),
-   new THREE.MeshBasicMaterial({color:'#54c8ef',transparent:true,opacity:.55})
-  );
-  ring.rotation.x=Math.PI/2;
-  ring.position.set(x,.15,z);
-  scene.add(ring);
-
-  const sign=label(Object.keys(groups)[i]+' ASSEMBLY BAY');
-  sign.position.set(x,3,z);
-  scene.add(sign);
-
-  stations.push({
-   key:Object.keys(groups)[i],
-   x,z,ring,built:false
-  });
- });
-
- defs.forEach(([type,group,name,x,z,description])=>{
-  const mesh=makeModel(type);
-  mesh.position.set(x,1.05,z);
-  scene.add(mesh);
-
-  const tag=label(name);
-  tag.position.set(0,1.15,0);
-  mesh.add(tag);
-
-  parts.push({
-   type,group,name,description,x,z,mesh,
-   collected:false,placed:false
-  });
- });
-
- player=new THREE.Group();
- player.position.set(0,0,16);
- scene.add(player);
- player.add(camera);
- camera.position.set(0,1.65,0);
-
- const glove=mat(suitColor,.5,.1);
-
- for(const x of [-.35,.35]){
-  const hand=new THREE.Mesh(new THREE.SphereGeometry(.15),glove);
-  hand.position.set(x,-.38,-.7);
-  hand.scale.set(1,.7,1.2);
-  camera.add(hand);
- }
-
+ positions.forEach(([x,z],i)=>{const pad=new THREE.Mesh(new THREE.CylinderGeometry(4.5,4.5,.15,36),mat('#8b9da1',.6,.2));pad.position.set(x,.02,z);scene.add(pad);const ring=new THREE.Mesh(new THREE.TorusGeometry(4.5,.08,8,48),new THREE.MeshBasicMaterial({color:'#54c8ef',transparent:true,opacity:.55}));ring.rotation.x=Math.PI/2;ring.position.set(x,.15,z);scene.add(ring);const sign=label(Object.keys(groups)[i]+' ASSEMBLY BAY');sign.position.set(x,3,z);scene.add(sign);stations.push({key:Object.keys(groups)[i],x,z,ring,built:false})});
+ defs.forEach(([type,group,name,x,z,description])=>{const mesh=makeModel(type);mesh.position.set(x,1.05,z);scene.add(mesh);const tag=label(name);tag.position.set(0,1.15,0);mesh.add(tag);parts.push({type,group,name,description,x,z,mesh,collected:false,placed:false})});
+ player=new THREE.Group();player.position.set(0,0,16);scene.add(player);player.add(camera);camera.position.set(0,1.65,0);
+ const glove=mat(suitColor,.5,.1);for(const x of [-.35,.35]){const hand=new THREE.Mesh(new THREE.SphereGeometry(.15),glove);hand.position.set(x,-.38,-.7);hand.scale.set(1,.7,1.2);camera.add(hand)}
  clock=new THREE.Clock();
 }
-
 function renderInventory(){
- const list=$('equipmentList');
- list.innerHTML='';
-
- parts.forEach(p=>{
-  const b=document.createElement('button');
-  b.textContent=(p.placed?'✓ ':p.collected?'IN HAND ':'')+p.name;
-  b.classList.toggle('selected',selected===p);
-  b.disabled=p.placed;
-
-  b.onclick=()=>{
-   selected=p;
-   $('guideTitle').textContent=p.name;
-   $('guideText').textContent=p.description;
-   renderInventory();
-
-   prompt(
-    p.collected
-    ?'This item is already with you.'
-    :'Selected: '+p.name+'. Move close to it and tap PICK / INSTALL.'
-   );
-  };
-
-  list.appendChild(b);
- });
+ const list=$('equipmentList');list.innerHTML='';
+ parts.forEach(p=>{const b=document.createElement('button');b.textContent=(p.placed?'✓ ':p.collected?'IN HAND ':'')+p.name;b.classList.toggle('selected',selected===p);b.disabled=p.placed;b.onclick=()=>{selected=p;$('guideTitle').textContent=p.name;$('guideText').textContent=p.description;renderInventory();prompt(p.collected?'This item is already with you.':'Selected: '+p.name+'. Move close to it and tap PICK / INSTALL.')};list.appendChild(b)});
 }
-
 function updateTasks(){
- $('tasks').innerHTML=Object.entries(groups).map(([k,n])=>{
-  let c=parts.filter(p=>p.group===k&&p.placed).length;
-  return `<div>${completed.has(k)?'🟢':'◯'} ${n}: ${completed.has(k)?'ONLINE':c+'/'+counts[k]}</div>`;
- }).join('');
+ $('tasks').innerHTML=Object.entries(groups).map(([k,n])=>{let c=parts.filter(p=>p.group===k&&p.placed).length;return `<div>${completed.has(k)?'🟢':'◯'} ${n}: ${completed.has(k)?'ONLINE':c+'/'+counts[k]}</div>`}).join('');
 }
-
-function prompt(t){
- $('prompt').textContent=t;
-}
-
+function prompt(t){$('prompt').textContent=t}
 function nearestUncollected(){
  let best=null,dmin=4.5;
-
- for(const p of parts){
-  if(p.placed||p.collected)continue;
-
-  const d=player.position.distanceTo(p.mesh.position);
-
-  if(d<dmin){
-   best=p;
-   dmin=d;
-  }
- }
-
+ for(const p of parts){if(p.placed||p.collected)continue;const d=player.position.distanceTo(p.mesh.position);if(d<dmin){best=p;dmin=d}}
  return best;
 }
-
 function take(p){
  if(!p||p.placed||p.collected)return;
-
- p.collected=true;
- held=p;
- selected=p;
-
- p.mesh.parent=camera;
- p.mesh.position.set(0,-.15,-1.35);
- p.mesh.rotation.set(.2,0,0);
- p.mesh.scale.setScalar(.48);
-
- $('carrying').textContent=p.name.toUpperCase();
- $('guideTitle').textContent=p.name;
- $('guideText').textContent=p.description;
-
- renderInventory();
-
- prompt('Carrying '+p.name+'. Go to the '+groups[p.group]+' assembly bay and tap INSTALL.');
+ p.collected=true;held=p;selected=p;p.mesh.parent=camera;p.mesh.position.set(0,-.15,-1.35);p.mesh.rotation.set(.2,0,0);p.mesh.scale.setScalar(.48);
+ $('carrying').textContent=p.name.toUpperCase();$('guideTitle').textContent=p.name;$('guideText').textContent=p.description;renderInventory();prompt('Carrying '+p.name+'. Go to the '+groups[p.group]+' assembly bay and tap INSTALL.');
 }
-
 function drop(){
- if(!held){
-  prompt('You are not carrying equipment.');
-  return;
- }
-
- const p=held;
- held=null;
- p.collected=false;
- p.mesh.parent=scene;
-
- p.mesh.position.copy(player.position).add(
-  new THREE.Vector3(Math.sin(yaw)*1.8,.7,-Math.cos(yaw)*1.8)
- );
-
- p.mesh.scale.setScalar(1);
- p.mesh.rotation.set(0,0,0);
-
- $('carrying').textContent='NOTHING';
-
- renderInventory();
-
- prompt(p.name+' dropped. Select it or move close and pick it up again.');
+ if(!held){prompt('You are not carrying equipment.');return}
+ const p=held;held=null;p.collected=false;p.mesh.parent=scene;p.mesh.position.copy(player.position).add(new THREE.Vector3(Math.sin(yaw)*1.8,.7,-Math.cos(yaw)*1.8));p.mesh.scale.setScalar(1);p.mesh.rotation.set(0,0,0);$('carrying').textContent='NOTHING';renderInventory();prompt(p.name+' dropped. Select it or move close and pick it up again.');
 }
-
 function install(){
- if(!held){
-  let p=selected;
-
-  if(!p||p.placed){
-   p=nearestUncollected();
-  }
-
-  if(!p){
-   prompt('Select an available item from the inventory or move closer to equipment.');
-   return;
-  }
-
-  if(player.position.distanceTo(p.mesh.position)>4.8){
-   prompt('Move closer to '+p.name+' to collect it.');
-   return;
-  }
-
-  take(p);
-  return;
- }
-
+ if(!held){let p=selected;if(!p||p.placed){p=nearestUncollected()}if(!p){prompt('Select an available item from the inventory or move closer to equipment.');return}if(player.position.distanceTo(p.mesh.position)>4.8){prompt('Move closer to '+p.name+' to collect it.');return}take(p);return}
  const station=stations.find(s=>s.key===held.group);
-
- if(!station||Math.hypot(player.position.x-station.x,player.position.z-station.z)>6.2){
-  prompt('Take '+held.name+' to the '+groups[held.group]+' assembly bay.');
-  return;
- }
-
- const p=held;
-
- p.mesh.parent=scene;
- p.mesh.position.set(
-  station.x+(Math.random()-.5)*3,
-  1,
-  station.z+(Math.random()-.5)*2
- );
-
- p.mesh.rotation.set(0,Math.random()*Math.PI,0);
- p.mesh.scale.setScalar(.85);
- p.placed=true;
- p.collected=false;
- held=null;
-
- $('carrying').textContent='NOTHING';
-
- const count=parts.filter(q=>q.group===p.group&&q.placed).length;
-
- prompt(p.name+' installed · '+count+'/'+counts[p.group]+' components');
-
- if(count===counts[p.group]){
-  completed.add(p.group);
-  station.built=true;
-  station.ring.material.color.set('#5bffac');
-  prompt(groups[p.group]+' is now ONLINE!');
- }
-
- updateTasks();
- renderInventory();
-
- if(completed.size===5)setTimeout(showCertificate,900);
+ if(!station||Math.hypot(player.position.x-station.x,player.position.z-station.z)>6.2){prompt('Take '+held.name+' to the '+groups[held.group]+' assembly bay.');return}
+ const p=held;p.mesh.parent=scene;p.mesh.position.set(station.x+(Math.random()-.5)*3,1,station.z+(Math.random()-.5)*2);p.mesh.rotation.set(0,Math.random()*Math.PI,0);p.mesh.scale.setScalar(.85);p.placed=true;p.collected=false;held=null;$('carrying').textContent='NOTHING';
+ const count=parts.filter(q=>q.group===p.group&&q.placed).length;prompt(p.name+' installed · '+count+'/'+counts[p.group]+' components');
+ if(count===counts[p.group]){completed.add(p.group);station.built=true;station.ring.material.color.set('#5bffac');prompt(groups[p.group]+' is now ONLINE!')}
+ updateTasks();renderInventory();if(completed.size===5)setTimeout(showCertificate,900);
 }
-
 function interact(){
- if(held){
-  install();
-  return;
- }
-
- if(selected&&!selected.placed&&!selected.collected){
-  if(player.position.distanceTo(selected.mesh.position)<4.8){
-   take(selected);
-   return;
-  }
- }
-
- const p=nearestUncollected();
-
- if(p){
-  selected=p;
-  take(p);
-  return;
- }
-
+ if(held){install();return}
+ if(selected&&!selected.placed&&!selected.collected){if(player.position.distanceTo(selected.mesh.position)<4.8){take(selected);return}}
+ const p=nearestUncollected();if(p){selected=p;take(p);return}
  prompt('Select an equipment item or move closer to a component.');
 }
-
-function showCertificate(){
- paused=true;
- clearTouch();
-
- $('hud').classList.add('hidden');
- document.body.classList.remove('playing');
-
- $('overlay').classList.remove('hidden');
- hideModals();
-
- $('certificate').classList.remove('hidden');
- $('certName').textContent=pilot;
-}
-
-function hideModals(){
- document.querySelectorAll('#overlay .modal').forEach(m=>m.classList.add('hidden'));
-}
-
-function pause(){
- if(!started||paused)return;
-
- paused=true;
- clearTouch();
- document.exitPointerLock?.();
-
- $('overlay').classList.remove('hidden');
- hideModals();
- $('pause').classList.remove('hidden');
-}
-
-function resume(){
- paused=false;
- $('overlay').classList.add('hidden');
-
- if(!touch)renderer.domElement.requestPointerLock?.();
-}
-
-function quit(){
- paused=true;
- clearTouch();
- document.exitPointerLock?.();
-
- $('overlay').classList.remove('hidden');
- hideModals();
- $('goodbye').classList.remove('hidden');
-}
-
-function clearTouch(){
- if(joyPointer!==null&&$('joystick').hasPointerCapture(joyPointer))
-  $('joystick').releasePointerCapture(joyPointer);
-
- if(lookPointer!==null&&renderer?.domElement?.hasPointerCapture(lookPointer))
-  renderer.domElement.releasePointerCapture(lookPointer);
-
- joyPointer=null;
- lookPointer=null;
- joyX=joyY=0;
-
- $('joystickStick').style.transform='translate(-50%,-50%)';
-}
-
+function showCertificate(){paused=true;clearTouch();$('hud').classList.add('hidden');document.body.classList.remove('playing');$('overlay').classList.remove('hidden');hideModals();$('certificate').classList.remove('hidden');$('certName').textContent=pilot}
+function hideModals(){document.querySelectorAll('#overlay .modal').forEach(m=>m.classList.add('hidden'))}
+function pause(){if(!started||paused)return;paused=true;clearTouch();document.exitPointerLock?.();$('overlay').classList.remove('hidden');hideModals();$('pause').classList.remove('hidden')}
+function resume(){paused=false;$('overlay').classList.add('hidden');if(!touch)renderer.domElement.requestPointerLock?.()}
+function quit(){paused=true;clearTouch();document.exitPointerLock?.();$('overlay').classList.remove('hidden');hideModals();$('goodbye').classList.remove('hidden')}
+function clearTouch(){if(joyPointer!==null&&$('joystick').hasPointerCapture(joyPointer))$('joystick').releasePointerCapture(joyPointer);if(lookPointer!==null&&renderer?.domElement?.hasPointerCapture(lookPointer))renderer.domElement.releasePointerCapture(lookPointer);joyPointer=null;lookPointer=null;joyX=joyY=0;$('joystickStick').style.transform='translate(-50%,-50%)'}
 function animate(){
- if(!started)return;
-
- requestAnimationFrame(animate);
-
- const dt=Math.min(clock.getDelta(),.04);
-
+ if(!started)return;requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);
  if(!paused){
-  const f=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
-  const r=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
-  const m=new THREE.Vector3();
-
-  if(keys.KeyW)m.add(f);
-  if(keys.KeyS)m.sub(f);
-  if(keys.KeyD)m.add(r);
-  if(keys.KeyA)m.sub(r);
-
-  m.addScaledVector(r,joyX);
-  m.addScaledVector(f,-joyY);
-
-  if(m.lengthSq()){
-   m.normalize().multiplyScalar(dt*5);
-   player.position.add(m);
-   energy=Math.max(0,energy-dt*.1);
-  }
-
-  player.position.x=THREE.MathUtils.clamp(player.position.x,-95,95);
-  player.position.z=THREE.MathUtils.clamp(player.position.z,-100,100);
-
-  if(player.position.z>20&&player.position.z<40&&player.position.x>5&&player.position.x<15)
-   player.position.y=THREE.MathUtils.clamp((39.4-player.position.z)*.43,0,8);
-  else
-   player.position.y=player.position.y>7.5?8:0;
-
-  $('energy').textContent=Math.floor(energy);
-  $('energyFill').style.width=energy+'%';
-
-  if(energy<=0){
-   prompt('Energy depleted. Mission paused.');
-   pause();
-  }
-
-  if(held){
-   $('carrying').textContent=held.name.toUpperCase();
-  }else{
-   const near=nearestUncollected();
-
-   if(near)
-    prompt('Nearby: '+near.name+' · select it and tap PICK / INSTALL');
-  }
+  const f=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw)),r=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw)),m=new THREE.Vector3();
+  if(keys.KeyW)m.add(f);if(keys.KeyS)m.sub(f);if(keys.KeyD)m.add(r);if(keys.KeyA)m.sub(r);m.addScaledVector(r,joyX);m.addScaledVector(f,-joyY);
+  if(m.lengthSq()){m.normalize().multiplyScalar(dt*5);player.position.add(m);energy=Math.max(0,energy-dt*.1)}
+  player.position.x=THREE.MathUtils.clamp(player.position.x,-95,95);player.position.z=THREE.MathUtils.clamp(player.position.z,-100,100);
+  if(player.position.z>20&&player.position.z<40&&player.position.x>5&&player.position.x<15)player.position.y=THREE.MathUtils.clamp((39.4-player.position.z)*.43,0,8);else player.position.y=player.position.y>7.5?8:0;
+  $('energy').textContent=Math.floor(energy);$('energyFill').style.width=energy+'%';
+  if(energy<=0){prompt('Energy depleted. Mission paused.');pause()}
+  if(held){$('carrying').textContent=held.name.toUpperCase()}else{const near=nearestUncollected();if(near)prompt('Nearby: '+near.name+' · select it and tap PICK / INSTALL')}
  }
-
  renderer.render(scene,camera);
 }
-
-function showSlide(){
- const s=slides[slide];
-
- $('slideTitle').textContent=s[0];
- $('briefingText').textContent=s[1];
-
- $('backSlide').style.display=slide===0?'none':'inline-block';
- $('nextSlide').textContent=slide===slides.length-1?'START MISSION':'NEXT';
-}
-
+function showSlide(){const s=slides[slide];$('slideTitle').textContent=s[0];$('briefingText').textContent=s[1];$('backSlide').style.display=slide===0?'none':'inline-block';$('nextSlide').textContent=slide===slides.length-1?'START MISSION':'NEXT'}
 function startGame(){
- pilot=$('pilotName').value.trim()||'Pioneer';
-
- $('pilotLabel').textContent=pilot.toUpperCase();
- $('certName').textContent=pilot;
-
- hideModals();
- $('overlay').classList.add('hidden');
- $('hud').classList.remove('hidden');
-
- document.body.classList.toggle('playing',touch);
-
- buildWorld();
- renderInventory();
- updateTasks();
-
- started=true;
- paused=false;
-
- if(!touch)renderer.domElement.requestPointerLock?.();
-
- animate();
+ pilot=$('pilotName').value.trim()||'Pioneer';$('pilotLabel').textContent=pilot.toUpperCase();$('certName').textContent=pilot;
+ hideModals();$('overlay').classList.add('hidden');$('hud').classList.remove('hidden');document.body.classList.toggle('playing',touch);$('mobileControls').style.display=touch?'block':'none';
+ buildWorld();renderInventory();updateTasks();started=true;paused=false;if(!touch)renderer.domElement.requestPointerLock?.();animate();
 }
-
-$('colors').addEventListener('click',e=>{
- const s=e.target.closest('.swatch');
-
- if(!s)return;
-
- document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('selected'));
-
- s.classList.add('selected');
- suitColor=s.dataset.color;
-});
-
-$('startBriefing').onclick=()=>{
- hideModals();
- $('briefing').classList.remove('hidden');
- slide=0;
- showSlide();
-};
-
-$('backSlide').onclick=()=>{
- slide=Math.max(0,slide-1);
- showSlide();
-};
-
-$('nextSlide').onclick=()=>{
- if(slide===slides.length-1){
-  startGame();
-  return;
- }
-
- slide++;
- showSlide();
-};
-
-$('resume').onclick=resume;
-$('quit').onclick=quit;
-$('exit').onclick=pause;
-$('restart').onclick=()=>location.reload();
-
-document.addEventListener('keydown',e=>{
- keys[e.code]=true;
-
- if(e.code==='Escape'&&!paused)pause();
- if(e.code==='KeyE'&&!paused)interact();
- if(e.code==='KeyQ'&&!paused)drop();
-});
-
+$('colors').addEventListener('click',e=>{const s=e.target.closest('.swatch');if(!s)return;document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('selected'));s.classList.add('selected');suitColor=s.dataset.color});
+$('startBriefing').onclick=()=>{hideModals();$('briefing').classList.remove('hidden');slide=0;showSlide()};
+$('backSlide').onclick=()=>{slide=Math.max(0,slide-1);showSlide()};
+$('nextSlide').onclick=()=>{if(slide===slides.length-1){startGame();return}slide++;showSlide()};
+$('resume').onclick=resume;$('quit').onclick=quit;$('exit').onclick=pause;$('restart').onclick=()=>location.reload();
+document.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='Escape'&&!paused)pause();if(e.code==='KeyE'&&!paused)interact();if(e.code==='KeyQ'&&!paused)drop()});
 document.addEventListener('keyup',e=>keys[e.code]=false);
-
-const joy=$('joystick');
-const stick=$('joystickStick');
-
-function moveJoy(e){
- const r=joy.getBoundingClientRect();
-
- const dx=e.clientX-(r.left+r.width/2);
- const dy=e.clientY-(r.top+r.height/2);
-
- const rad=r.width*.34;
- const d=Math.hypot(dx,dy);
- const s=d>rad?rad/d:1;
-
- joyX=dx*s/rad;
- joyY=dy*s/rad;
-
- stick.style.transform=`translate(calc(-50% + ${dx*s}px),calc(-50% + ${dy*s}px))`;
-}
-
-joy.addEventListener('pointerdown',e=>{
- e.preventDefault();
-
- if(joyPointer!==null)return;
-
- joyPointer=e.pointerId;
- joy.setPointerCapture(e.pointerId);
-
- moveJoy(e);
-});
-
-joy.addEventListener('pointermove',e=>{
- if(e.pointerId===joyPointer)moveJoy(e);
-});
-
-function joyEnd(e){
- if(e.pointerId!==joyPointer)return;
-
- joyPointer=null;
- joyX=joyY=0;
-
- stick.style.transform='translate(-50%,-50%)';
-}
-
-joy.addEventListener('pointerup',joyEnd);
-joy.addEventListener('pointercancel',joyEnd);
-joy.addEventListener('lostpointercapture',joyEnd);
-
-$('touchUse').onclick=()=>{
- if(started&&!paused)interact();
-};
-
-$('touchDrop').onclick=()=>{
- if(started&&!paused)drop();
-};
-
-document.addEventListener('pointerdown',e=>{
- if(!touch||paused||!started||lookPointer!==null||e.target!==renderer?.domElement)return;
-
- lookPointer=e.pointerId;
- lastX=e.clientX;
- lastY=e.clientY;
-
- renderer.domElement.setPointerCapture(e.pointerId);
-});
-
-document.addEventListener('pointermove',e=>{
- if(!touch||e.pointerId!==lookPointer||paused)return;
-
- yaw-=(e.clientX-lastX)*.004;
-
- pitch=THREE.MathUtils.clamp(
-  pitch-(e.clientY-lastY)*.004,
-  -1.35,
-  1.35
- );
-
- lastX=e.clientX;
- lastY=e.clientY;
-
- player.rotation.y=yaw;
- camera.rotation.x=pitch;
-});
-
-function lookEnd(e){
- if(e.pointerId===lookPointer)lookPointer=null;
-}
-
-document.addEventListener('pointerup',lookEnd);
-document.addEventListener('pointercancel',lookEnd);
-
-document.addEventListener('mousemove',e=>{
- if(touch||document.pointerLockElement!==renderer?.domElement||paused)return;
-
- yaw-=e.movementX*.002;
-
- pitch=THREE.MathUtils.clamp(
-  pitch-e.movementY*.002,
-  -1.35,
-  1.35
- );
-
- player.rotation.y=yaw;
- camera.rotation.x=pitch;
-});
-
-document.addEventListener('pointerlockchange',()=>{
- if(!touch&&!document.pointerLockElement&&started&&!paused)pause();
-});
-
-window.addEventListener('resize',()=>{
- if(!camera||!renderer)return;
-
- camera.aspect=innerWidth/innerHeight;
- camera.updateProjectionMatrix();
-
- renderer.setSize(innerWidth,innerHeight);
-});
-
+const joy=$('joystick'),stick=$('joystickStick');
+function moveJoy(e){const r=joy.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),rad=r.width*.34,d=Math.hypot(dx,dy),s=d>rad?rad/d:1;joyX=dx*s/rad;joyY=dy*s/rad;stick.style.transform=`translate(calc(-50% + ${dx*s}px),calc(-50% + ${dy*s}px))`}
+joy.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(joyPointer!==null)return;joyPointer=e.pointerId;joy.setPointerCapture(e.pointerId);moveJoy(e)});
+joy.addEventListener('pointermove',e=>{if(e.pointerId===joyPointer){e.preventDefault();moveJoy(e)}});
+function joyEnd(e){if(e.pointerId!==joyPointer)return;joyPointer=null;joyX=joyY=0;stick.style.transform='translate(-50%,-50%)'}
+joy.addEventListener('pointerup',joyEnd);joy.addEventListener('pointercancel',joyEnd);joy.addEventListener('lostpointercapture',joyEnd);
+$('touchUse').onclick=()=>{if(started&&!paused)interact()};$('touchDrop').onclick=()=>{if(started&&!paused)drop()};
+document.addEventListener('pointerdown',e=>{if(!touch||paused||!started||lookPointer!==null||e.target!==renderer?.domElement)return;lookPointer=e.pointerId;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
+document.addEventListener('pointermove',e=>{if(!touch||e.pointerId!==lookPointer||paused)return;yaw-=(e.clientX-lastX)*.004;pitch=THREE.MathUtils.clamp(pitch-(e.clientY-lastY)*.004,-1.35,1.35);lastX=e.clientX;lastY=e.clientY;player.rotation.y=yaw;camera.rotation.x=pitch});
+function lookEnd(e){if(e.pointerId===lookPointer)lookPointer=null}
+document.addEventListener('pointerup',lookEnd);document.addEventListener('pointercancel',lookEnd);
+document.addEventListener('mousemove',e=>{if(touch||document.pointerLockElement!==renderer?.domElement||paused)return;yaw-=e.movementX*.002;pitch=THREE.MathUtils.clamp(pitch-e.movementY*.002,-1.35,1.35);player.rotation.y=yaw;camera.rotation.x=pitch});
+document.addEventListener('pointerlockchange',()=>{if(!touch&&!document.pointerLockElement&&started&&!paused)pause()});
+window.addEventListener('resize',()=>{if(!camera||!renderer)return;const view=$('gameViewport');camera.aspect=view.clientWidth/view.clientHeight;camera.updateProjectionMatrix();renderer.setSize(view.clientWidth,view.clientHeight)});
+new ResizeObserver(()=>{if(!camera||!renderer)return;const view=$('gameViewport');camera.aspect=view.clientWidth/view.clientHeight;camera.updateProjectionMatrix();renderer.setSize(view.clientWidth,view.clientHeight)}).observe($('gameViewport'));
 </script>
 </body>
 </html>
