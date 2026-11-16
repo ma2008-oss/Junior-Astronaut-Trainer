@@ -1,938 +1,400 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#071522">
 <title>Junior Astronaut Trainer</title>
-
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Rajdhani:wght@500;600;700&family=Playfair+Display:ital,wght@1,700;1,800&display=swap');
-
-:root {
-  --blue:#9abac7;
-  --gold:#c6a66b;
-  --green:#86b9a2;
-  --panel:rgba(12,22,31,.94);
-  --border:#526b79;
-  --white:#e6edf0;
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Rajdhani:wght@500;600;700&display=swap');
+:root{--cyan:#75d7e8;--gold:#e9c77d;--panel:rgba(8,20,32,.91);--line:#477183;--white:#edf7fa}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071522;color:var(--white);font-family:Rajdhani,sans-serif;touch-action:none}
+canvas{display:block;position:fixed;inset:0}
+button,input{font:inherit}
+button{border:1px solid #6da6b7;border-radius:9px;background:linear-gradient(135deg,#23566c,#287b83);color:white;padding:10px 14px;font-weight:700;letter-spacing:.04em;cursor:pointer;touch-action:manipulation}
+button:disabled{opacity:.38;cursor:not-allowed}
+button.secondary{background:#263d4d;border-color:#536f7c}
+button.active{outline:2px solid var(--gold);background:#5a5034}
+#overlay{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:14px;background:radial-gradient(ellipse at 50% 15%,#294c60,#07111d 75%);overflow:auto}
+.modal{width:min(760px,96vw);max-height:94dvh;overflow:auto;padding:clamp(16px,3vw,30px);border:1px solid #527b8b;border-radius:16px;background:linear-gradient(145deg,rgba(25,47,62,.98),rgba(7,19,30,.99));box-shadow:0 22px 70px #000b}
+.hidden{display:none!important}
+.eyebrow{font:700 12px Orbitron,sans-serif;letter-spacing:.17em;color:var(--cyan)}
+h1{font:800 clamp(29px,5vw,52px) Orbitron,sans-serif;line-height:1.12;color:#e6f5f8;margin:12px 0}
+h2{font:700 23px Orbitron,sans-serif;color:#ccecf1}
+p{font-size:18px;line-height:1.5;color:#d4e3e9}
+label{display:block;margin:14px 0 5px;color:#a9dce5;font-weight:700}
+input{width:100%;padding:11px;border-radius:8px;border:1px solid #547889;background:#102738;color:white;font-size:18px}
+.colors{display:flex;gap:13px;margin:12px 0 20px}
+.swatch{width:29px;height:29px;border-radius:50%;border:2px solid #fff;cursor:pointer}
+.swatch.selected{outline:3px solid var(--cyan);outline-offset:3px}
+#briefingText{min-height:80px;font-size:19px}
+#hud{position:fixed;inset:0;z-index:5;pointer-events:none}
+.panel{position:absolute;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 12px;box-shadow:0 8px 25px #0007;backdrop-filter:blur(9px)}
+#top{top:10px;left:10px;display:flex;gap:8px;align-items:flex-start}
+#stats{font-size:15px;line-height:1.35;min-width:165px}
+#brand{font:700 11px Orbitron,sans-serif;letter-spacing:.1em;color:#b7d7df}
+#mission{top:10px;right:10px;width:220px;font-size:15px;line-height:1.45}
+#mission b,#inventory b,#guide b{color:var(--cyan);font:700 12px Orbitron,sans-serif}
+#tasks{margin-top:6px}
+#inventory{left:10px;top:115px;width:230px;max-height:42vh;overflow:auto;pointer-events:auto}
+#equipmentList{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px}
+#equipmentList button{font:600 13px Rajdhani,sans-serif;padding:7px 5px;min-height:35px;background:#183648;border-color:#3c6577}
+#equipmentList button.selected{outline:2px solid var(--gold);background:#594d32}
+#guide{right:10px;bottom:95px;width:220px;font-size:14px;line-height:1.35}
+#guideText{margin-top:5px}
+#prompt{position:absolute;left:50%;bottom:17px;transform:translateX(-50%);padding:7px 13px;border-radius:20px;background:#071522c9;color:#ffe4a0;font-weight:700;font-size:16px;text-align:center;max-width:70vw}
+#exit{position:absolute;right:10px;top:92px;pointer-events:auto}
+#mobileControls{display:none;position:absolute;inset:0;pointer-events:none}
+#joystick{position:absolute;left:max(15px,env(safe-area-inset-left));bottom:max(15px,env(safe-area-inset-bottom));width:116px;height:116px;pointer-events:auto;touch-action:none}
+#joystickBase{position:absolute;inset:5px;border:2px solid #a7d7df99;border-radius:50%;background:#0d2638cc;box-shadow:0 4px 18px #0009}
+#joystickStick{position:absolute;left:50%;top:50%;width:48px;height:48px;border-radius:50%;border:2px solid #e3f4f6;background:#39788c;transform:translate(-50%,-50%);box-shadow:0 3px 12px #0009}
+#joyLabel{position:absolute;bottom:-4px;left:0;right:0;text-align:center;font:700 10px Orbitron;color:white;text-shadow:0 2px 4px black}
+#touchActions{position:absolute;right:max(12px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));display:flex;gap:8px;pointer-events:auto}
+#touchActions button{min-width:65px;min-height:54px;padding:7px;font:700 12px Orbitron;touch-action:manipulation}
+#lookHint{position:absolute;right:12px;bottom:84px;color:#d8e9ec;font-size:12px;text-shadow:0 2px 5px black}
+#rotateNotice{display:none;position:fixed;inset:0;z-index:30;place-items:center;text-align:center;padding:25px;background:#071522}
+#rotateNotice .phone{font-size:52px}
+#rotateNotice h2{font-size:clamp(24px,7vw,38px)}
+#certificate{text-align:center;border:4px double var(--gold);padding:25px;background:linear-gradient(145deg,#304e5b,#142a38)}
+#certificate h1{color:#f2d99d}
+#certName{font-size:34px;font-style:italic;color:#fff0c8}
+@media(pointer:coarse){
+ #mobileControls{display:block}
+ #brand{display:none}
+ #inventory{top:auto;bottom:82px;left:10px;width:min(190px,31vw);max-height:31vh;padding:7px}
+ #equipmentList{grid-template-columns:1fr 1fr;gap:3px}
+ #equipmentList button{font-size:12px;padding:5px 3px;min-height:31px}
+ #mission{width:min(190px,31vw);font-size:12px;padding:7px;max-height:25vh;overflow:auto}
+ #guide{display:none}
+ #stats{font-size:12px;min-width:130px;padding:7px}
+ #exit{top:76px;right:10px;font-size:11px;padding:7px}
+ #prompt{bottom:12px;font-size:12px;max-width:38vw}
 }
-
-* {box-sizing:border-box}
-
-body {
-  margin:0;
-  overflow:hidden;
-  background:#080f19;
-  color:var(--white);
-  font-family:'Rajdhani',sans-serif;
-  font-size:22px;
-  letter-spacing:.01em;
+@media(pointer:coarse) and (orientation:portrait){
+ body.playing #rotateNotice{display:grid}
+ body.playing #hud{visibility:hidden}
 }
-
-canvas {display:block}
-
-#overlay {
-  position:fixed;
-  inset:0;
-  z-index:10;
-  display:grid;
-  place-items:center;
-  padding:15px;
-  background:radial-gradient(ellipse at 50% 20%,rgba(55,82,96,.88),rgba(7,14,22,.97) 72%);
-  overflow:auto;
-}
-
-.modal {
-  width:min(820px,96vw);
-  max-height:94vh;
-  overflow:auto;
-  padding:30px;
-  border:1px solid #607987;
-  border-radius:10px;
-  background:linear-gradient(145deg,rgba(34,50,61,.98),rgba(12,23,32,.99));
-  box-shadow:0 24px 90px #000c, inset 0 1px rgba(255,255,255,.06);
-}
-
-.hidden {display:none!important}
-
-.eyebrow {
-  font:700 17px Orbitron,sans-serif;
-  letter-spacing:.16em;
-  color:#9ed5e4;
-}
-
-h1 {
-  margin:10px 0;
-  font:700 clamp(32px,5vw,58px) 'Rajdhani',sans-serif;
-  letter-spacing:.025em;
-  color:#d6e2e7;
-  text-shadow:0 3px 18px #0008;
-}
-
-h2 {
-  font:700 25px 'Rajdhani',sans-serif;
-  letter-spacing:.06em;
-  color:#d4e0e5;
-}
-
-p {
-  line-height:1.7;
-  color:#d1dfe4;
-}
-
-button {
-  padding:12px 18px;
-  border:1px solid #8bb6c2;
-  border-radius:5px;
-  background:linear-gradient(110deg,#345b6c,#426a69);
-  color:white;
-  font:700 18px Orbitron,sans-serif;
-  cursor:pointer;
-}
-
-button.secondary {
-  background:#405664;
-}
-
-input {
-  width:100%;
-  padding:12px;
-  margin:8px 0 16px;
-  border:1px solid #718c9a;
-  border-radius:8px;
-  background:#172b38;
-  color:white;
-  font:17px 'Rajdhani',sans-serif;
-}
-
-.colors {display:flex;gap:12px;margin:12px 0 20px}
-
-.swatch {
-  width:29px;
-  height:29px;
-  border-radius:50%;
-  border:2px solid white;
-  cursor:pointer;
-}
-
-.swatch.selected {
-  outline:3px solid #9bd9e7;
-  outline-offset:3px;
-}
-
-.mentor {
-  display:grid;
-  grid-template-columns:170px 1fr;
-  gap:22px;
-  align-items:center;
-  margin:15px 0;
-}
-
-.portrait {
-  height:220px;
-  border:1px solid #8ba5ae;
-  border-radius:14px;
-  overflow:hidden;
-  background:linear-gradient(145deg,#6d8591,#c2a98b);
-}
-
-.portrait svg {width:100%;height:100%}
-
-#slidebody {
-  min-height:130px;
-  font-size:19px;
-  line-height:1.7;
-}
-
-#hud {
-  position:fixed;
-  inset:0;
-  z-index:2;
-  pointer-events:none;
-}
-
-.panel {
-  position:absolute;
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:7px;
-  padding:12px 15px;
-  box-shadow:0 8px 28px #0008, inset 0 1px rgba(255,255,255,.035);
-  backdrop-filter:blur(12px);
-}
-
-#top {
-  top:12px;
-  left:12px;
-  right:12px;
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-}
-
-#brand {
-  font:700 13px 'Rajdhani',sans-serif;
-  letter-spacing:.16em;
-  color:#b6ccd5;
-}
-
-#stats {
-  font-size:22px;
-  line-height:1.7;
-}
-
-#stats b {color:#9de6c5}
-
-#mission {
-  top:132px;
-  right:12px;
-  left:auto;
-  width:265px;
-  max-height:42vh;
-  overflow:auto;
-  font-size:21px;
-  line-height:1.8;
-}
-
-#guide {
-  right:24px;
-  top:48%;
-  bottom:auto;
-  transform:translateY(-50%);
-  width:min(310px,28vw);
-  max-height:38vh;
-  overflow:auto;
-  font-size:22px;
-  line-height:1.65;
-}
-
-#equipment {
-  left:12px;
-  bottom:12px;
-  width:265px;
-  max-height:30vh;
-  overflow:auto;
-  pointer-events:auto;
-  font-size:20px;
-}
-
-#equipment button {
-  font:700 19px 'Rajdhani',sans-serif;
-  padding:5px 8px;
-  margin:3px;
-  background:#243b49;
-  border:1px solid #607986;
-}
-
-#prompt {
-  position:absolute;
-  bottom:12%;
-  left:50%;
-  transform:translateX(-50%);
-  color:#f4d99c;
-  text-shadow:0 2px 8px black;
-  font-size:24px;
-  font-weight:700;
-  white-space:nowrap;
-}
-
-#cross {
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:10px;
-  height:10px;
-  border:2px solid white;
-  border-radius:50%;
-  transform:translate(-50%,-50%);
-}
-
-#exit {
-  position:absolute;
-  top:78px;
-  right:12px;
-  pointer-events:auto;
-}
-
-#certificate {
-  text-align:center;
-  border:4px double #d9c28c;
-  padding:35px 20px;
-  background:linear-gradient(145deg,#344c58,#192c39);
-}
-
-#certificate h1 {
-  color:#f0d99c;
-  font-size:clamp(35px,6vw,58px);
-}
-
-.cert-line {
-  height:1px;
-  background:#d9c28c;
-  margin:20px 0;
-}
-
-.cert-name {
-  font:italic 800 34px 'Playfair Display',serif;
-  color:#fff0c5;
-}
-
-@media(max-width:700px) {
-  .mentor {grid-template-columns:110px 1fr}
-  .portrait {height:160px}
-  #mission {
-    width:230px;
-    top:140px;
-    right:8px;
-    max-height:38vh;
-    font-size:19px;
-  }
-  #equipment {
-    width:215px;
-    max-height:25vh;
-    font-size:18px;
-  }
-  #guide {
-    width:245px;
-    right:8px;
-    top:52%;
-    bottom:auto;
-    max-height:32vh;
-    transform:translateY(-50%);
-    font-size:20px;
-  }
-}
-
-#mobileControls {
-  display:none;
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-}
-
-#joystick {
-  position:absolute;
-  left:max(12px,env(safe-area-inset-left));
-  bottom:max(12px,env(safe-area-inset-bottom));
-  width:120px;
-  height:120px;
-  pointer-events:auto;
-  touch-action:none;
-  user-select:none;
-}
-
-#joystickBase {
-  position:absolute;
-  inset:8px;
-  border:2px solid #a9c5cd99;
-  border-radius:50%;
-  background:#10212dbb;
-  box-shadow:0 4px 16px #0008;
-}
-
-#joystickStick {
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:48px;
-  height:48px;
-  border:2px solid #d5e6e9;
-  border-radius:50%;
-  background:#426a79e8;
-  transform:translate(-50%,-50%);
-}
-
-#joystickLabel {
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:-2px;
-  color:#e6edf0;
-  font:700 11px Orbitron,sans-serif;
-  text-align:center;
-  text-shadow:0 2px 4px #000;
-}
-
-#touchActions {
-  position:absolute;
-  right:max(12px,env(safe-area-inset-right));
-  bottom:max(18px,env(safe-area-inset-bottom));
-  display:flex;
-  gap:8px;
-}
-
-#touchActions button {
-  min-width:68px;
-  min-height:54px;
-  padding:8px;
-  font-size:12px;
-  pointer-events:auto;
-  touch-action:manipulation;
-}
-
-#rotateNotice {
-  display:none;
-  position:fixed;
-  inset:0;
-  z-index:20;
-  place-items:center;
-  padding:24px;
-  background:radial-gradient(ellipse at 50% 20%,rgba(55,82,96,.98),rgba(7,14,22,.99) 72%);
-  text-align:center;
-}
-
-#rotateNotice h1 {
-  font-size:clamp(28px,8vw,42px);
-}
-
-#rotateNotice p {
-  margin:8px auto;
-  max-width:32rem;
-  font-size:20px;
-}
-
-@media (pointer:coarse) {
-  #mobileControls {display:block}
-  #canvas, canvas {touch-action:none}
-  #equipment {
-    left:8px;
-    top:68px;
-    bottom:auto;
-    width:clamp(145px,25vw,190px);
-    max-height:24vh;
-    padding:7px;
-    font-size:14px;
-  }
-  #equipment button {
-    min-height:36px;
-    margin:2px;
-    padding:4px 6px;
-    font-size:14px;
-  }
-  #mission {
-    top:68px;
-    right:8px;
-    width:clamp(145px,25vw,190px);
-    max-height:20vh;
-    padding:7px;
-    font-size:14px;
-    line-height:1.35;
-  }
-  #guide {
-    display:block;
-    top:auto;
-    right:8px;
-    bottom:78px;
-    width:clamp(145px,25vw,190px);
-    max-height:18vh;
-    padding:7px;
-    transform:none;
-    font-size:13px;
-    line-height:1.35;
-  }
-  #exit {
-    top:8px;
-    right:8px;
-    min-height:42px;
-    padding:7px 10px;
-    font-size:12px;
-  }
-  #stats {
-    padding:7px 10px;
-    font-size:14px;
-    line-height:1.35;
-  }
-  #brand {display:none}
-  #top {top:8px;left:8px;right:8px;padding:0}
-  #prompt {
-    bottom:12px;
-    max-width:42vw;
-    overflow:hidden;
-    font-size:14px;
-    text-align:center;
-    white-space:normal;
-  }
-  #cross {width:8px;height:8px}
-}
-
-@media (pointer:coarse) and (orientation:landscape) {
-  .modal {
-    max-height:94dvh;
-    padding:14px 18px;
-  }
-  .modal h1 {margin:5px 0;font-size:clamp(26px,5vw,40px)}
-  .modal p {margin:6px 0;line-height:1.35}
-  .modal input {padding:8px;margin:5px 0 8px}
-  .colors {gap:9px;margin:8px 0 12px}
-  .swatch {width:25px;height:25px}
-  #slidebody {min-height:56px;font-size:16px;line-height:1.4}
-  .mentor {grid-template-columns:78px 1fr;gap:12px;margin:6px 0}
-  .portrait {height:90px}
-  #joystick {width:104px;height:104px}
-  #joystickStick {width:42px;height:42px}
-  #touchActions button {min-width:64px;min-height:48px}
-}
-
-@media (pointer:coarse) and (orientation:portrait) and (max-width:900px) {
-  body.mobile-playing #rotateNotice {display:grid}
-  body.mobile-playing #hud {visibility:hidden}
+@media(pointer:coarse) and (orientation:landscape){
+ #inventory{top:75px;bottom:auto;max-height:34vh;width:clamp(150px,22vw,205px)}
+ #mission{top:75px;max-height:27vh}
+ #stats{font-size:12px}
+ #joystick{width:100px;height:100px}
+ #joystickStick{width:42px;height:42px}
+ #touchActions button{min-height:47px;min-width:59px}
+ #lookHint{bottom:72px}
 }
 </style>
 </head>
-
 <body>
 
 <div id="overlay">
-
-  <div class="modal" id="welcome">
-    <h1>Junior Astronaut Trainer</h1>
-    <p>
-      Welcome, trainee! Explore a lunar outpost, learn how real
-      space technologies work, collect equipment and assemble
-      the systems needed to establish a Moon settlement.
-    </p>
-
-    <label>ASTRONAUT NAME</label>
-    <input id="pilotName" maxlength="24" value="Pioneer">
-
-    <div class="eyebrow">CHOOSE YOUR SPACE SUIT</div>
-    <div class="colors" id="colors">
-      <i class="swatch selected" data-color="#36a9e8" style="background:#36a9e8"></i>
-      <i class="swatch" data-color="#e6a23c" style="background:#e6a23c"></i>
-      <i class="swatch" data-color="#d96b87" style="background:#d96b87"></i>
-      <i class="swatch" data-color="#8b79df" style="background:#8b79df"></i>
-      <i class="swatch" data-color="#72b78a" style="background:#72b78a"></i>
-    </div>
-
-    <button id="beginBriefing">MEET YOUR MISSION MENTOR</button>
-    <p id="controlInstructions" style="font-size:18px">WASD: Move · Mouse: Look · E: Pick up/install · Q: Drop · ESC: Pause</p>
+ <section class="modal" id="welcome">
+  <div class="eyebrow">LUNAR EXPLORATION PROGRAM</div>
+  <h1>Junior Astronaut Trainer</h1>
+  <p>Welcome, trainee! Explore a lunar outpost, collect equipment, carry it to the correct assembly bay, and build five essential systems for a Moon settlement.</p>
+  <label for="pilotName">ASTRONAUT NAME</label><input id="pilotName" maxlength="24" value="Pioneer">
+  <div class="eyebrow" style="margin-top:17px">CHOOSE YOUR SPACE SUIT</div>
+  <div class="colors" id="colors">
+   <i class="swatch selected" data-color="#36a9e8" style="background:#36a9e8"></i><i class="swatch" data-color="#e6a23c" style="background:#e6a23c"></i><i class="swatch" data-color="#d96b87" style="background:#d96b87"></i><i class="swatch" data-color="#8b79df" style="background:#8b79df"></i><i class="swatch" data-color="#72b78a" style="background:#72b78a"></i>
   </div>
+  <button id="startBriefing">MEET YOUR MISSION MENTOR</button>
+  <p style="font-size:15px">Mobile: use the joystick to move, drag the open screen to look around, and tap PICK / INSTALL or DROP. Desktop: WASD + mouse, E to pick/install, Q to drop, ESC to pause.</p>
+ </section>
 
-  <div class="modal hidden" id="briefing">
-    <div class="eyebrow">MISSION BRIEFING</div>
+ <section class="modal hidden" id="briefing">
+  <div class="eyebrow">MISSION BRIEFING · KALPANA</div><h1 id="slideTitle">WELCOME TO THE MOON</h1><div id="briefingText"></div>
+  <button class="secondary" id="backSlide">BACK</button> <button id="nextSlide">NEXT</button>
+ </section>
 
-    <div class="mentor">
-      <div class="portrait">
-        <svg viewBox="0 0 180 220">
-          <defs>
-            <linearGradient id="skin" x2="0" y2="1">
-              <stop stop-color="#e0ae88"/>
-              <stop offset="1" stop-color="#a96c50"/>
-            </linearGradient>
-          </defs>
-          <path d="M15 220Q20 145 90 140Q160 145 165 220Z" fill="#e3e8e7" stroke="#506d7c" stroke-width="3"/>
-          <path d="M42 90Q35 15 90 12Q150 18 138 95L128 135H50Z" fill="#172b39" stroke="#a9c1c9" stroke-width="4"/>
-          <path d="M55 77Q55 35 91 34Q129 35 129 79L124 115Q117 141 91 143Q62 140 56 113Z" fill="url(#skin)"/>
-          <path d="M54 77Q55 34 90 29Q123 27 132 70L125 63Q100 49 57 74Z" fill="#202a32"/>
-          <path d="M66 86Q76 80 85 86M98 86Q108 80 117 86" fill="none" stroke="#45312a" stroke-width="3"/>
-          <ellipse cx="77" cy="94" rx="4" ry="3" fill="#202b31"/>
-          <ellipse cx="107" cy="94" rx="4" ry="3" fill="#202b31"/>
-          <path d="M91 95L87 109L95 111" fill="none" stroke="#875642" stroke-width="2"/>
-          <path d="M77 121Q92 132 107 120" fill="none" stroke="#713d3b" stroke-width="3" stroke-linecap="round"/>
-          <path d="M44 157Q90 135 136 157L158 220H22Z" fill="#e2e8e7" stroke="#708d98" stroke-width="3"/>
-          <path d="M67 151L91 181L115 151" fill="none" stroke="#648d9b" stroke-width="4"/>
-          <path d="M84 181L91 188L98 181" fill="#d4b26b"/>
-          <rect x="68" y="195" width="46" height="15" rx="3" fill="#426879"/>
-          <text x="91" y="205" text-anchor="middle" font-size="9" fill="white"></text>
-        </svg>
-      </div>
+ <section class="modal hidden" id="pause">
+  <div class="eyebrow">MISSION CONTROL</div><h1>MISSION PAUSED</h1><p>Your lunar mission is waiting.</p><button id="resume">RESUME MISSION</button> <button class="secondary" id="quit">EXIT TRAINING</button>
+ </section>
 
-      <div>
-        <h2>Kalpana</h2>
-      </div>
-    </div>
+ <section class="modal hidden" id="certificate">
+  <div class="eyebrow">LUNAR EXPLORATION PROGRAM</div><h1>MISSION COMPLETED</h1><p>This certificate is proudly presented to</p><div id="certName">Pioneer</div><hr><h1>CERTIFIED JUNIOR ASTRONAUT</h1><p>You brought all five lunar settlement systems online.</p><p style="color:#f2d99d">POWER · WATER · OXYGEN · HABITAT · CULTIVATION</p><button id="restart">PLAY AGAIN</button>
+ </section>
 
-    <div class="eyebrow" id="slideCount">BRIEFING 1 / 7</div>
-    <h2 id="slideTitle"></h2>
-    <div id="slidebody"></div>
+ <section class="modal hidden" id="goodbye"><h1>MISSION CLOSED</h1><p>Thank you for exploring the lunar outpost.</p><button onclick="location.reload()">RETURN HOME</button></section>
+</div>
 
-    <button class="secondary" id="previousSlide">BACK</button>
-    <button id="nextSlide">NEXT</button>
-  </div>
-
-  <div class="modal hidden" id="pause">
-    <div class="eyebrow">MISSION CONTROL</div>
-    <h1>MISSION PAUSED</h1>
-    <p>Your lunar mission is waiting.</p>
-    <button id="resume">RESUME MISSION</button>
-    <button class="secondary" id="quit">EXIT TRAINING</button>
-  </div>
-
-  <div class="modal hidden" id="certificate">
-    <h1>MISSION COMPLETED</h1>
-    <div class="cert-line"></div>
-    <p style="font-size:20px">This certificate is proudly presented to</p>
-    <div class="cert-name" id="certName">Pioneer</div>
-    <div class="cert-line"></div>
-    <h1>CERTIFIED<br>JUNIOR ASTRONAUT</h1>
-    <p>
-      For successfully completing the lunar settlement training mission
-      and assembling all five essential systems.
-    </p>
-    <p style="color:#f0d99c">SOLAR POWER · WATER · OXYGEN · HABITAT · CULTIVATION</p>
-    <div class="cert-line"></div>
-    <p style="font-size:13px">JUNIOR ASTRONAUT TRAINER PROGRAM</p>
-    <button id="restart">RETURN TO TRAINING HOME</button>
-  </div>
-
-  <div class="modal hidden" id="goodbye">
-    <h1>MISSION CLOSED</h1>
-    <p>Thank you for exploring the lunar outpost.</p>
-    <button onclick="location.reload()">RETURN TO HOME</button>
-  </div>
-
+<div id="rotateNotice">
+ <div>
+  <div class="phone">📱 ↻</div>
+  <h2>Rotate your phone</h2>
+  <p>Please switch to <b>landscape mode</b> for the best view and gaming experience.</p>
+  <p>Then return to the game.</p>
+ </div>
 </div>
 
 <div id="hud" class="hidden">
-  <div id="top">
-    <div class="panel" id="brand">JUNIOR ASTRONAUT TRAINER</div>
-    <div class="panel" id="stats">
-      <span id="pilotLabel">PIONEER</span><br>
-      ENERGY: <b id="energy">100%</b>
-      <div style="height:6px;background:#20394b;border-radius:8px">
-        <div id="energyFill" style="height:6px;width:100%;background:#65d8ad;border-radius:8px"></div>
-      </div>
-      CARRYING: <b id="carrying">NOTHING</b>
-    </div>
+ <div id="top">
+  <div class="panel" id="brand">JUNIOR ASTRONAUT TRAINER</div>
+  <div class="panel" id="stats">
+   <b id="pilotLabel">PIONEER</b><br>
+   ENERGY <span id="energy">100</span>%
+   <div style="height:5px;background:#20394b;border-radius:5px">
+    <div id="energyFill" style="height:5px;width:100%;background:#65d8ad;border-radius:5px"></div>
+   </div>
+   CARRYING <b id="carrying">NOTHING</b>
   </div>
+ </div>
 
-  <div class="panel" id="mission">
-    <b style="color:#a9dce8">MISSION OBJECTIVES</b>
-    <div id="tasks"></div>
-  </div>
+ <div class="panel" id="mission"><b>MISSION OBJECTIVES</b><div id="tasks"></div></div>
 
-  <div class="panel" id="guide">
-    <b id="guideTitle" style="color:#a9dce8">EQUIPMENT FIELD GUIDE</b>
-    <div id="guideText">Click any equipment name to learn what it does.</div>
-  </div>
+ <div class="panel" id="inventory">
+  <b>EQUIPMENT INVENTORY</b>
+  <div style="font-size:12px;color:#bed1d8">Tap an item to select it. Select an item, then PICK it up nearby.</div>
+  <div id="equipmentList"></div>
+ </div>
 
-  <div class="panel" id="equipment">
-    <b>EQUIPMENT LIBRARY</b>
-    <div id="equipmentList"></div>
-  </div>
+ <div class="panel" id="guide">
+  <b id="guideTitle">FIELD GUIDE</b>
+  <div id="guideText">Select equipment to learn about it.</div>
+ </div>
 
-  <div id="prompt">Explore the lunar outpost</div>
-  <div id="cross"></div>
-  <button id="exit">PAUSE / EXIT</button>
-  <div id="mobileControls" aria-label="Touch controls">
-    <div id="joystick" role="application" aria-label="Movement joystick">
-      <div id="joystickBase"><div id="joystickStick"></div></div>
-      <span id="joystickLabel">MOVE</span>
-    </div>
-    <div id="touchActions">
-      <button id="touchInteract" type="button" aria-label="Pick up or install equipment">USE</button>
-      <button id="touchDrop" type="button" aria-label="Drop carried equipment">DROP</button>
-    </div>
-  </div>
-</div>
+ <button id="exit">PAUSE</button>
+ <div id="prompt">Explore the lunar outpost</div>
 
-<div id="rotateNotice" role="status" aria-live="polite">
-  <div>
-    <h1>Rotate your device</h1>
-    <p>Junior Astronaut Trainer is designed for landscape play. Turn your phone sideways to continue.</p>
+ <div id="mobileControls">
+  <div id="joystick">
+   <div id="joystickBase"><div id="joystickStick"></div></div>
+   <div id="joyLabel">MOVE</div>
   </div>
+  <div id="lookHint">DRAG OPEN SCREEN TO LOOK</div>
+  <div id="touchActions">
+   <button id="touchUse">PICK / INSTALL</button>
+   <button id="touchDrop" class="secondary">DROP</button>
+  </div>
+ </div>
 </div>
 
 <script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
-  }
-}
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
 </script>
 
 <script type="module">
 import * as THREE from 'three';
 
-const $ = id => document.getElementById(id);
-const touchDevice=window.matchMedia('(pointer: coarse)').matches;
-if(touchDevice) {
- $('controlInstructions').textContent='Joystick: Move · Drag screen: Look · USE: Pick up/install · DROP: Drop · PAUSE: Menu';
-}
+const $=id=>document.getElementById(id);
+const touch=matchMedia('(pointer:coarse)').matches;
 
-let scene,camera,renderer,clock,player,door,roofAccess=false;
-let playerLevel='ground';
-let yaw=0,pitch=0,energy=100;
-let keys={},parts=[],sites=[],held=null;
-let joystickPointer=null,joystickX=0,joystickY=0,lookPointer=null,lastLookX=0,lastLookY=0;
-let completed=new Set();
-let paused=true,started=false;
-let astronaut='Pioneer';
-let suitColor='#36a9e8';
-let briefingIndex=0;
+let scene,camera,renderer,clock,player,yaw=0,pitch=0,energy=100,paused=true,started=false;
+let keys={},joyX=0,joyY=0,joyPointer=null,lookPointer=null,lastX=0,lastY=0;
+let parts=[],stations=[],selected=null,held=null,completed=new Set(),suitColor='#36a9e8',pilot='Pioneer',slide=0;
 
-const groupSizes={
-  solar:3,water:4,oxygen:3,habitat:3,farm:5
+const groups={
+ solar:'Solar Power',
+ water:'Water Processing',
+ oxygen:'Oxygen Production',
+ habitat:'Crew Habitat',
+ farm:'Cultivation'
 };
 
-const groupNames={
-  solar:'Solar Power',
-  water:'Water Production',
-  oxygen:'Oxygen Production',
-  habitat:'Crew Habitat',
-  farm:'Cultivation Module'
-};
-
-const explanations={
-  panel:['Photovoltaic Solar Array','These panels collect sunlight and convert it into electricity for the outpost.'],
-  battery:['Lithium-ion Battery','This stores electricity so the outpost can use it when sunlight is unavailable.'],
-  cable:['Power Distribution Cable','These protected cables carry electricity from the solar panels to the equipment.'],
-  drill:['Lunar Regolith Auger','This drill collects lunar soil that may contain frozen water.'],
-  heater:['Thermal Extraction Unit','This machine heats collected soil in a sealed chamber, releasing trapped water vapour.'],
-  condenser:['Vapour Condenser','This cools the vapour until it changes into liquid water.'],
-  purifier:['Water Purifier','This filters and treats the collected water.'],
-  feeder:['Regolith Feed Hopper','This funnel stores lunar soil and feeds it into the oxygen reactor.'],
-  reactor:['Molten Regolith Electrolysis Reactor','This uses heat and electricity to separate oxygen from minerals in lunar soil.'],
-  tank:['Oxygen Storage Tank','This safely stores the oxygen produced by the reactor.'],
-  pressure_shell:['Outpost-Wide Pressure Envelope','A continuous sealed pressure boundary encloses the connected habitat spaces. The walls, roof joints, doors and service penetrations must all be sealed; it is not a single module placed in one corner.'],
-  regolith_shield:['Radiation Shield System','Carry the single radiation-shield package to the front entrance area and press E. The system will automatically deploy protective berms in all four directions around the outpost.'],
-  eclss:['Distributed Environmental Control and Life Support System (ECLSS)','Air circulation, carbon-dioxide removal, humidity control, temperature regulation and monitoring are distributed through ducts and service units across the occupied modules.'],
-  bed:['Plant Growth Beds','These trays hold the growing material and plants.'],
-  nutrient:['Nutrient Reservoir','This stores water mixed with minerals that plants need.'],
-  lights:['LED Grow Lights','These lights provide the energy plants need to grow.'],
-  pump:['Irrigation Pump','This moves water and nutrients from the tank to the plants.'],
-  seedlings:['Seedling Tray','This holds and protects young plants as they begin growing.']
-};
-
-const specifications=[
- ['panel','solar','Photovoltaic array',-19,10],
- ['battery','solar','Lithium-ion battery',-19,4],
- ['cable','solar','Power cable harness',-19,-2],
-
- ['drill','water','Regolith auger',-10,10],
- ['heater','water','Thermal extraction unit',-10,4],
- ['condenser','water','Vapour condenser',-10,-2],
- ['purifier','water','Water purifier',-10,-8],
-
- ['feeder','oxygen','Regolith feed hopper',0,10],
- ['reactor','oxygen','Electrolysis reactor',0,4],
- ['tank','oxygen','Oxygen tank',0,-2],
-
- ['pressure_shell','habitat','Outpost pressure envelope',10,10],
- ['regolith_shield','habitat','Radiation shield deployment package',10,4],
- ['eclss','habitat','Environmental life-support network',10,-2],
-
- ['bed','farm','Growth beds',19,10],
- ['nutrient','farm','Nutrient reservoir',19,4],
- ['lights','farm','LED grow lights',19,-2],
- ['pump','farm','Irrigation pump',19,-8],
- ['seedlings','farm','Seedling tray',19,-14]
+const slides=[
+ ['WELCOME TO THE MOON','Your mission is to establish a working lunar settlement. Explore the outpost and learn how astronauts could use local resources to support life.'],
+ ['SOLAR POWER','Solar panels collect sunlight and convert it into electrical energy. Batteries store electricity for periods when sunlight is unavailable.'],
+ ['WATER PRODUCTION','Lunar soil, called regolith, may contain frozen water. Heating, condensation and purification can help make water available to a crew.'],
+ ['OXYGEN PRODUCTION','Oxygen may be extracted from oxygen-bearing lunar minerals using processes such as molten regolith electrolysis.'],
+ ['CREW HABITAT','A lunar habitat needs a sealed pressure boundary, radiation protection and environmental control systems to support its occupants.'],
+ ['CULTIVATION','Plant growth beds, nutrient supplies, irrigation and LED lights can support controlled food cultivation.'],
+ ['YOUR MISSION','Select equipment in the inventory, collect it from the outpost, and deliver it to the matching assembly station. Complete all five systems.']
 ];
 
-function mat(color,rough=.6,metal=0) {
- return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
+const defs=[
+ ['panel','solar','Solar array',-19,10,'Converts sunlight into electricity.'],
+ ['battery','solar','Battery unit',-19,4,'Stores electricity for use when sunlight is unavailable.'],
+ ['cable','solar','Power cables',-19,-2,'Connects the solar array and power storage to the outpost.'],
+ ['drill','water','Regolith auger',-10,10,'Collects lunar soil that may contain frozen water.'],
+ ['heater','water','Thermal extractor',-10,4,'Heats collected material in a sealed system.'],
+ ['condenser','water','Vapour condenser',-10,-2,'Cools vapour so it becomes liquid water.'],
+ ['purifier','water','Water purifier',-10,-8,'Filters and treats collected water.'],
+ ['feeder','oxygen','Regolith hopper',0,10,'Feeds lunar soil into the oxygen-processing system.'],
+ ['reactor','oxygen','Oxygen reactor',0,4,'Separates oxygen from oxygen-bearing lunar minerals.'],
+ ['tank','oxygen','Oxygen storage tank',0,-2,'Stores oxygen for later use.'],
+ ['pressure','habitat','Pressure envelope',10,10,'Represents the sealed, pressurised boundary of the habitat.'],
+ ['shield','habitat','Radiation shield',10,4,'Represents protective shielding around the crew area.'],
+ ['eclss','habitat','Life-support unit',10,-2,'Supports air circulation and environmental control.'],
+ ['bed','farm','Plant growth beds',19,10,'Holds plants and their growing medium.'],
+ ['nutrient','farm','Nutrient reservoir',19,4,'Stores water mixed with nutrients for plants.'],
+ ['lights','farm','LED grow lights',19,-2,'Provides light for controlled plant growth.'],
+ ['pump','farm','Irrigation pump',19,-8,'Moves water and nutrients to the growing beds.'],
+ ['seedlings','farm','Seedling tray',19,-14,'Holds young plants as they begin growing.']
+];
+
+const counts={solar:3,water:4,oxygen:3,habitat:3,farm:5};
+const materials={};
+
+function mat(c,r=.6,m=0){
+ return new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
 }
 
-function addEquipmentDetails(group, accent='#9abac7') {
- const boltMat=mat('#c0c9c9',.28,.82);
- const darkMat=mat('#17242c',.72,.18);
- // Fasteners, service ports and small status indicators give equipment a manufactured finish.
- for(const x of [-.48,.48]) {
-  for(const z of [-.31,.31]) {
-   const bolt=cylinder(group,x,.88,z,.035,.025,boltMat);
-   bolt.rotation.x=Math.PI/2;
-  }
- }
- const status=new THREE.Mesh(new THREE.SphereGeometry(.045,12,10),new THREE.MeshStandardMaterial({color:accent,emissive:accent,emissiveIntensity:.45,roughness:.3}));
- status.position.set(.48,.72,.39);
- group.add(status);
- const service=box(group,-.42,.72,.39,.18,.12,.035,darkMat);
- service.material=darkMat;
- return group;
+function box(parent,x,y,z,w,h,d,m){
+ const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
+ o.position.set(x,y,z);
+ o.castShadow=true;
+ o.receiveShadow=true;
+ parent.add(o);
+ return o;
 }
 
-function box(parent,x,y,z,w,h,d,material) {
- const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);
- m.position.set(x,y,z);
- m.castShadow=true;
- m.receiveShadow=true;
- parent.add(m);
- return m;
+function cyl(parent,x,y,z,r,h,m){
+ const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,20),m);
+ o.position.set(x,y,z);
+ o.castShadow=true;
+ parent.add(o);
+ return o;
 }
 
-function cylinder(parent,x,y,z,r,h,material) {
- const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,20),material);
- m.position.set(x,y,z);
- m.castShadow=true;
- parent.add(m);
- return m;
+function label(text){
+ const c=document.createElement('canvas');
+ c.width=512;
+ c.height=100;
+ const x=c.getContext('2d');
+ x.fillStyle='#eaf4f5';
+ x.fillRect(0,0,512,100);
+ x.strokeStyle='#44889a';
+ x.lineWidth=5;
+ x.strokeRect(3,3,506,94);
+ x.fillStyle='#244b5a';
+ x.font='bold 29px Arial';
+ x.textAlign='center';
+ x.fillText(text.toUpperCase(),256,62);
+ const t=new THREE.CanvasTexture(c);
+ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t}));
+ s.scale.set(3.2,.63,1);
+ return s;
 }
 
-function makeLabel(text) {
- const canvas=document.createElement('canvas');
- canvas.width=512;
- canvas.height=100;
- const ctx=canvas.getContext('2d');
- ctx.fillStyle='#edf5f4';
- ctx.fillRect(0,0,512,100);
- ctx.strokeStyle='#4b899c';
- ctx.lineWidth=5;
- ctx.strokeRect(4,4,504,92);
- ctx.fillStyle='#264d5c';
- ctx.font='bold 30px Arial';
- ctx.textAlign='center';
- ctx.fillText(text,256,62);
- const texture=new THREE.CanvasTexture(canvas);
- const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture}));
- sprite.scale.set(3.3,.65,1);
- return sprite;
-}
-
-function makeEquipment(type) {
+function makeModel(type){
  const g=new THREE.Group();
- const metal=mat('#879ca7',.35,.6);
- const dark=mat('#263b49',.45,.4);
- const blue=mat('#317a9d',.3,.4);
- const gold=mat('#c49c5b',.4,.5);
- const white=mat('#dce5e4');
- const green=mat('#5c9c69');
+ const steel=mat('#9aadb5',.35,.65);
+ const dark=mat('#263d4a',.5,.4);
+ const blue=mat('#347d9d',.3,.45);
+ const gold=mat('#c6a05e',.4,.5);
+ const white=mat('#dce7e7');
+ const green=mat('#62a777');
 
- if(type==='panel') {
+ if(type==='panel'){
   box(g,0,.1,0,1.5,.12,.95,dark);
-  for(let i=0;i<3;i++) {
+  for(let i=0;i<3;i++){
    box(g,-.45+i*.45,.2,0,.42,.04,.83,blue);
-   for(let j=0;j<6;j++) box(g,-.45+i*.45,.225,-.33+j*.13,.39,.012,.012,mat('#8fc5d5',.24,.5));
-   box(g,-.45+i*.45,.23,0,.025,.02,.82,mat('#9ddbea'));
+   for(let j=0;j<6;j++)
+    box(g,-.45+i*.45,.23,-.33+j*.13,.39,.012,.012,mat('#9bd9e7'));
   }
-  box(g,0,-.02,0,1.28,.08,.78,metal);
-  for(const x of [-.55,.55]) {
-   const leg=box(g,x,-.18,0,.08,.32,.08,dark);
-  }
-  cylinder(g,0,-.1,0,.09,.4,metal);
+  for(let x of [-.55,.55])
+   box(g,x,-.12,0,.08,.32,.08,steel);
  }
 
- if(type==='battery') {
+ if(type==='battery'){
   box(g,0,.35,0,1,.7,.7,dark);
-  box(g,0,.73,0,.7,.08,.5,metal);
-  for(let i=0;i<3;i++) {
+  box(g,0,.73,0,.7,.08,.5,steel);
+  for(let i=0;i<3;i++)
    box(g,-.3+i*.3,.8,0,.1,.05,.15,gold);
-   box(g,-.3+i*.3,.37,.36,.12,.22,.025,blue);
-  }
-  for(const x of [-.42,.42]) cylinder(g,x,.42,-.37,.055,.12,metal);
  }
 
- if(type==='cable') {
+ if(type==='cable'){
   box(g,0,.1,0,1,.18,.7,dark);
-  for(let i=0;i<3;i++) {
-   const torus=new THREE.Mesh(new THREE.TorusGeometry(.22,.05,8,24),mat(['#d8ad48','#55a9d4','#d56d68'][i]));
-   torus.position.set(-.3+i*.3,.3,0);
-   g.add(torus);
+  for(let i=0;i<3;i++){
+   const t=new THREE.Mesh(
+    new THREE.TorusGeometry(.22,.05,8,24),
+    mat(['#d8ad48','#55a9d4','#d56d68'][i])
+   );
+   t.position.set(-.3+i*.3,.3,0);
+   g.add(t);
   }
  }
 
- if(type==='drill') {
-  box(g,0,.35,0,.8,.6,.7,metal);
-  cylinder(g,0,-.1,0,.13,.45,gold);
+ if(type==='drill'){
+  box(g,0,.35,0,.8,.6,.7,steel);
+  cyl(g,0,-.1,0,.13,.45,gold);
  }
 
- if(type==='heater') {
+ if(type==='heater'){
   box(g,0,.4,0,1,.75,.75,dark);
-  cylinder(g,0,.85,0,.3,.15,metal);
+  cyl(g,0,.85,0,.3,.15,steel);
   box(g,0,.3,.4,.45,.3,.05,mat('#d96c42'));
  }
 
- if(type==='condenser') {
-  box(g,0,.35,0,1,.6,.65,metal);
-  for(let i=0;i<5;i++) box(g,-.4+i*.2,.35,.36,.06,.65,.06,blue);
+ if(type==='condenser'){
+  box(g,0,.35,0,1,.6,.65,steel);
+  for(let i=0;i<5;i++)
+   box(g,-.4+i*.2,.35,.36,.06,.65,.06,blue);
  }
 
- if(type==='purifier') {
-  cylinder(g,0,.4,0,.38,.85,white);
-  cylinder(g,0,.88,0,.4,.12,metal);
+ if(type==='purifier'){
+  cyl(g,0,.4,0,.38,.85,white);
+  cyl(g,0,.88,0,.4,.12,steel);
  }
 
- if(type==='feeder') {
-  box(g,0,.15,0,.85,.3,.7,metal);
-  cylinder(g,0,.55,0,.3,.55,gold);
+ if(type==='feeder'){
+  box(g,0,.15,0,.85,.3,.7,steel);
+  cyl(g,0,.55,0,.3,.55,gold);
  }
 
- if(type==='reactor') {
-  cylinder(g,0,.45,0,.44,.9,metal);
-  cylinder(g,0,.95,0,.5,.14,gold);
-  cylinder(g,0,-.03,0,.34,.12,dark);
-  for(let i=0;i<3;i++) {
+ if(type==='reactor'){
+  cyl(g,0,.45,0,.44,.9,steel);
+  cyl(g,0,.95,0,.5,.14,gold);
+  for(let i=0;i<3;i++)
    box(g,-.25+i*.25,.45,.42,.07,.3,.05,mat('#d76d44'));
-   cylinder(g,-.25+i*.25,.45,.47,.035,.34,gold);
-  }
-  for(let a=0;a<4;a++) {
-   const x=Math.cos(a*Math.PI/2)*.47;
-   const z=Math.sin(a*Math.PI/2)*.47;
-   box(g,x,.35,z,.12,.62,.12,dark);
-  }
  }
 
- if(type==='tank') {
-  cylinder(g,0,.5,0,.38,1,white);
-  cylinder(g,0,1.05,0,.2,.12,metal);
-  cylinder(g,0,.02,0,.39,.1,dark);
-  for(let y of [.25,.72]) {
-   const band=new THREE.Mesh(new THREE.TorusGeometry(.385,.035,8,32),gold);
-   band.position.y=y;
-   g.add(band);
-  }
-  box(g,0,.58,.39,.22,.22,.04,blue);
+ if(type==='tank'){
+  cyl(g,0,.5,0,.38,1,white);
+  cyl(g,0,1.05,0,.2,.12,steel);
+  const band=new THREE.Mesh(new THREE.TorusGeometry(.385,.035,8,32),gold);
+  band.position.y=.5;
+  g.add(band);
  }
 
- if(type==='pressure_shell') {
+ if(type==='pressure'){
   box(g,0,.42,0,1.25,.85,.18,white);
   box(g,0,.42,.12,1.08,.68,.08,blue);
-  for(let x of [-.55,.55]) box(g,x,.42,.18,.08,.95,.22,gold);
-  box(g,0,.92,0,1.35,.12,.28,metal);
+  box(g,0,.92,0,1.35,.12,.28,steel);
  }
 
- if(type==='regolith_shield') {
+ if(type==='shield'){
   box(g,0,.22,0,1.35,.42,.95,gold);
   box(g,0,.47,0,1.25,.12,.85,mat('#8b8068'));
-  for(let x of [-.48,0,.48]) box(g,x,.56,0,.035,.06,.78,metal);
-  for(let x of [-.58,.58]) {
-   box(g,x,.27,0,.09,.5,1.02,dark);
-   cylinder(g,x,.05,-.35,.09,.08,metal);
-   cylinder(g,x,.05,.35,.09,.08,metal);
-  }
-  const label=box(g,0,.55,.45,.45,.16,.025,mat('#d5d9d5',.8,0));
  }
 
- if(type==='eclss') {
+ if(type==='eclss'){
   box(g,0,.48,0,.95,.95,.72,white);
   box(g,0,.5,.38,.65,.55,.06,blue);
-  for(let x of [-.65,.65]) {
-   const duct=cylinder(g,x,.72,0,.12,.8,metal);
-   duct.rotation.z=Math.PI/2;
-  }
-  for(let i=0;i<4;i++) box(g,-.3+i*.2,.2,.4,.07,.18,.04,green);
+  for(let i=0;i<4;i++)
+   box(g,-.3+i*.2,.2,.4,.07,.18,.04,green);
  }
 
- if(type==='bed') {
+ if(type==='bed'){
   box(g,0,.15,0,1.3,.3,.85,mat('#8e7453'));
-  box(g,0,.33,0,1.15,.06,.7,dark);
-  for(let i=0;i<5;i++) {
-   const leaf=new THREE.Mesh(new THREE.SphereGeometry(.12,12,10),green);
+  for(let i=0;i<5;i++){
+   const leaf=new THREE.Mesh(new THREE.SphereGeometry(.12),green);
    leaf.position.set(-.45+i*.22,.48,0);
    leaf.scale.set(.7,1.5,.7);
    g.add(leaf);
   }
  }
 
- if(type==='nutrient') {
+ if(type==='nutrient'){
   box(g,0,.3,0,.9,.6,.7,blue);
-  cylinder(g,0,.68,0,.3,.12,metal);
+  cyl(g,0,.68,0,.3,.12,steel);
  }
 
- if(type==='lights') {
+ if(type==='lights'){
   box(g,0,.12,0,1.25,.12,.5,dark);
-  for(let i=0;i<5;i++) box(g,-.48+i*.24,.02,0,.12,.04,.38,mat('#efaaaa'));
+  for(let i=0;i<5;i++)
+   box(g,-.48+i*.24,.02,0,.12,.04,.38,mat('#efaaaa'));
  }
 
- if(type==='pump') {
+ if(type==='pump'){
   box(g,0,.3,0,.7,.55,.6,blue);
-  cylinder(g,.4,.3,0,.14,.35,gold);
+  cyl(g,.4,.3,0,.14,.35,gold);
  }
 
- if(type==='seedlings') {
+ if(type==='seedlings'){
   box(g,0,.15,0,1.1,.25,.7,white);
-  for(let i=0;i<4;i++) {
-   cylinder(g,-.3+i*.2,.35,0,.035,.25,green);
+  for(let i=0;i<4;i++){
+   cyl(g,-.3+i*.2,.35,0,.035,.25,green);
    const leaf=new THREE.Mesh(new THREE.SphereGeometry(.12),green);
    leaf.position.set(-.3+i*.2,.5,0);
    g.add(leaf);
@@ -940,341 +402,144 @@ function makeEquipment(type) {
  }
 
  box(g,0,-.72,0,1.35,.08,1.05,dark);
- if(!['panel','regolith_shield','pressure_shell','eclss','bed','seedlings','lights'].includes(type)) {
-  addEquipmentDetails(g);
- }
  return g;
 }
 
-function makeSky() {
- scene.background=new THREE.Color('#020710');
- scene.fog=new THREE.Fog('#29343e',100,240);
+function buildWorld(){
+ scene=new THREE.Scene();
+ scene.background=new THREE.Color('#030a13');
+ scene.fog=new THREE.Fog('#29343e',85,190);
 
- const positions=[];
- for(let i=0;i<1800;i++) {
-  const radius=150;
-  const theta=Math.random()*Math.PI*2;
-  const phi=Math.acos(2*Math.random()-1);
-  positions.push(
-   radius*Math.sin(phi)*Math.cos(theta),
-   radius*Math.cos(phi),
-   radius*Math.sin(phi)*Math.sin(theta)
-  );
- }
+ camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.08,400);
 
- const geometry=new THREE.BufferGeometry();
- geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+ renderer=new THREE.WebGLRenderer({antialias:!touch});
+ renderer.setSize(innerWidth,innerHeight);
+ renderer.setPixelRatio(Math.min(devicePixelRatio,touch?1.5:2));
+ renderer.shadowMap.enabled=true;
+ renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+ renderer.outputColorSpace=THREE.SRGBColorSpace;
+ renderer.toneMapping=THREE.ACESFilmicToneMapping;
+ renderer.toneMappingExposure=1;
+ document.body.prepend(renderer.domElement);
 
- const stars=new THREE.Points(
-  geometry,
-  new THREE.PointsMaterial({color:'#ffffff',size:.48,sizeAttenuation:false})
- );
- scene.add(stars);
+ scene.add(new THREE.HemisphereLight('#c5d3dc','#30363a',1));
 
- const earth=new THREE.Mesh(
-  new THREE.SphereGeometry(5,40,32),
-  new THREE.MeshStandardMaterial({
-   color:'#286b9e',
-   roughness:.8,
-   emissive:'#071c3b',
-   emissiveIntensity:.55
-  })
- );
- earth.position.set(-35,32,-90);
- scene.add(earth);
+ const sun=new THREE.DirectionalLight('#f1e5cb',2.5);
+ sun.position.set(-35,55,30);
+ sun.castShadow=true;
+ sun.shadow.mapSize.set(2048,2048);
+ sun.shadow.camera.left=-65;
+ sun.shadow.camera.right=65;
+ sun.shadow.camera.top=65;
+ sun.shadow.camera.bottom=-65;
+ scene.add(sun);
 
- const cloud=new THREE.Mesh(
-  new THREE.SphereGeometry(5.04,40,32),
-  new THREE.MeshBasicMaterial({
-   color:'#b5d9e7',
-   transparent:true,
-   opacity:.14,
-   side:THREE.BackSide
-  })
- );
- cloud.position.copy(earth.position);
- scene.add(cloud);
-
- for(let i=0;i<20;i++) {
-  const h=7+Math.random()*12;
-  const mountain=new THREE.Mesh(
-   new THREE.ConeGeometry(9+Math.random()*10,h,5),
-   mat('#454d56')
-  );
-  mountain.position.set(-150+i*16,h/2-1,-115);
-  scene.add(mountain);
- }
-}
-
-function createMoonGround() {
  const ground=new THREE.Mesh(
-  new THREE.PlaneGeometry(500,500),
-  mat('#77736c',1,0)
+  new THREE.PlaneGeometry(400,400),
+  mat('#77736c',1)
  );
  ground.rotation.x=-Math.PI/2;
  ground.position.y=-.12;
  ground.receiveShadow=true;
  scene.add(ground);
 
- for(let i=0;i<240;i++) {
-  const r=.3+Math.random()*1.7;
-  const rock=new THREE.Mesh(
+ for(let i=0;i<150;i++){
+  let r=.3+Math.random()*1.5;
+  let rock=new THREE.Mesh(
    new THREE.DodecahedronGeometry(r,1),
-   mat(i%3===0?'#777b7d':'#555d64',1,0)
+   mat('#646b70',1)
   );
-  let x=(Math.random()-.5)*190;
-  let z=(Math.random()-.5)*210;
-  if(Math.abs(x)<32&&z>-35&&z<35) continue;
-  rock.position.set(x,r*.3,z);
-  rock.rotation.set(Math.random(),Math.random(),Math.random());
-  rock.scale.y=.45+Math.random()*.5;
-  rock.castShadow=true;
+  rock.position.set(
+   (Math.random()-.5)*150,
+   r*.3,
+   (Math.random()-.5)*160
+  );
+  rock.scale.y=.5;
   scene.add(rock);
  }
 
- for(let i=0;i<38;i++) {
-  const r=1.5+Math.random()*4;
-  const crater=new THREE.Mesh(
-   new THREE.TorusGeometry(r,.28,8,32),
-   mat('#4c5157')
-  );
-  crater.rotation.x=Math.PI/2;
-  crater.position.set(
-   (Math.random()-.5)*170,
-   -.02,
-   (Math.random()-.5)*180
-  );
-  scene.add(crater);
- }
-}
-
-function makeStation(group,x,z,title,description) {
- const g=new THREE.Group();
- g.position.set(x,0,z);
- scene.add(g);
-
- const pad=new THREE.Mesh(
-  new THREE.CylinderGeometry(4.5,4.5,.15,40),
-  mat('#8b9da1',.6,.2)
+ const earth=new THREE.Mesh(
+  new THREE.SphereGeometry(4,32,24),
+  mat('#286b9e',.8)
  );
- pad.position.y=.02;
- g.add(pad);
+ earth.position.set(-35,32,-90);
+ scene.add(earth);
 
- const ring=new THREE.Mesh(
-  new THREE.CylinderGeometry(4.7,4.7,.08,40),
-  new THREE.MeshStandardMaterial({
-   color:'#54c8ef',
-   wireframe:true,
-   transparent:true,
-   opacity:.25
-  })
- );
- ring.position.y=.12;
- g.add(ring);
-
- const spine=box(g,0,.5,-3.2,7.5,.35,.4,mat('#78aeb7',.3,.4));
- const beacon=new THREE.Mesh(
-  new THREE.SphereGeometry(.18,16,12),
-  mat('#45d5c2',.2,.2)
- );
- beacon.position.set(0,1,-3.2);
- g.add(beacon);
-
- const sign=makeLabel(title);
- sign.position.set(0,3.1,0);
- sign.scale.set(4.5,.7,1);
- g.add(sign);
-
- sites.push({group,x,z,title,description,g,ring,spine,beacon,built:false});
-}
-
-function buildWorld() {
- scene=new THREE.Scene();
- makeSky();
-
- camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.08,500);
-
- renderer=new THREE.WebGLRenderer({antialias:true});
- renderer.setSize(innerWidth,innerHeight);
- renderer.setPixelRatio(Math.min(devicePixelRatio,touchDevice?1.5:2));
- renderer.shadowMap.enabled=true;
- renderer.shadowMap.type=THREE.PCFSoftShadowMap;
- renderer.outputColorSpace=THREE.SRGBColorSpace;
- renderer.toneMapping=THREE.ACESFilmicToneMapping;
- renderer.toneMappingExposure=1.0;
- document.body.prepend(renderer.domElement);
-
- scene.add(new THREE.HemisphereLight('#c5d3dc','#30363a',.9));
-
- const fillLight=new THREE.DirectionalLight('#9eb9ca',.55);
- fillLight.position.set(35,22,-25);
- scene.add(fillLight);
-
- const sun=new THREE.DirectionalLight('#e8dfcb',2.7);
- sun.position.set(-35,55,30);
- sun.castShadow=true;
- sun.shadow.mapSize.set(3072,3072);
- sun.shadow.camera.left=-90;
- sun.shadow.camera.right=90;
- sun.shadow.camera.top=90;
- sun.shadow.camera.bottom=-90;
- sun.shadow.bias=-.00018;
- sun.shadow.normalBias=.025;
- scene.add(sun);
-
- createMoonGround();
-
+ // Main outpost structure and roof
  box(scene,0,0,-4,54,.3,54,mat('#8d9da0',.6,.15));
 
  const wall=mat('#a8b9bb',.5,.2);
  const trim=mat('#7199a4',.4,.3);
 
- for(const x of [-27,27]) {
+ for(const x of [-27,27])
   box(scene,x,4,-4,.5,8,54,wall);
-  for(let z=-28;z<22;z+=6)
-   box(scene,x,4,z,.22,8,.2,trim);
- }
 
  box(scene,0,4,-31,54,8,.5,wall);
-
  box(scene,-17,4,23,20,8,.5,wall);
  box(scene,17,4,23,20,8,.5,wall);
  box(scene,0,7.8,23,14,.4,.5,trim);
+ box(scene,0,3.5,22.7,5.8,7,.3,mat('#6a9ba8',.4,.25));
+ box(scene,0,8,-4,54,.55,54,mat('#657b86',.55,.35));
 
- door=box(scene,0,3.5,22.7,5.8,7,.3,mat('#6a9ba8',.4,.25));
+ // Front access ramp
+ const angle=Math.atan(8.35/19.5);
+ const ramp=box(scene,10,4.12,30.25,7.8,.62,19.5,mat('#687b83',.72,.22));
+ ramp.rotation.x=angle;
 
- const glass=new THREE.MeshPhysicalMaterial({
-  color:'#a7dce4',
-  roughness:.15,
-  metalness:.1,
-  transparent:true,
-  opacity:.12,
-  side:THREE.DoubleSide
- });
+ for(let i=0;i<13;i++)
+  box(scene,10,.35+i*.64,39.4-i*1.48,7.35,.12,.18,mat('#aab5b6',.72,.18));
 
- const roofDeck=box(scene,0,8,-4,54,.55,54,mat('#657b86',.55,.35));
- roofDeck.receiveShadow=true;
-
- box(scene,0,7.68,-4,52,.12,52,mat('#b1c1c0',.8,.05));
-
- for(let z of [-28,-18,-8,2,12,22])
-  box(scene,0,7.48,z,53,.18,.28,trim);
-
- // Wide, walkable access stair with a continuous sloped ramp surface.
- // The ramp is the actual movement surface; treads and rails are visual guides.
- const ladderMetal=mat('#9eafb5',.32,.72);
- const rampMat=mat('#687b83',.72,.22);
- const stepMat=mat('#aab5b6',.72,.18);
- const rampAngle=Math.atan(8.35/19.5);
- const ramp=box(scene,10,4.12,30.25,7.8,.62,19.5,rampMat);
- ramp.rotation.x=rampAngle;
-
- // Raised anti-slip transverse treads are evenly spaced along the ramp.
- for(let i=0;i<13;i++) {
-  const z=39.4-i*1.48;
-  const y=.35+i*.64;
-  box(scene,10,y,z,7.35,.12,.18,stepMat);
+ for(let x of [5.75,14.25]){
+  const rail=box(scene,x,4.55,30.25,.16,.16,19.5,mat('#9eafb5',.32,.72));
+  rail.rotation.x=angle;
  }
 
- // Handrails follow the incline and remain continuous at the top landing.
- for(const x of [5.75,14.25]) {
-  for(let i=0;i<9;i++) {
-   const z=38.8-i*2.05;
-   const y=.95+i*.88;
-   box(scene,x,y,z,.14,1.35,.14,ladderMetal);
-  }
-
-  const rail=box(scene,x,4.55,30.25,.16,.16,19.5,ladderMetal);
-  rail.rotation.x=rampAngle;
-
-  box(scene,x,.8,39.4,.18,1.6,.18,ladderMetal);
-  box(scene,x,8.55,20.8,.18,1.2,.18,ladderMetal);
- }
-
- // A clear roof landing gives the player room to turn and place the array.
  box(scene,10,8.39,19.15,9,.24,5.2,mat('#87989b',.62,.3));
 
- for(const x of [6.1,13.9])
-  box(scene,x,8.65,18.7,.12,.28,4.5,ladderMetal);
+ for(let x of [-21,-13,-5,3,19])
+  box(scene,x,8.38,-8,6.3,.15,8,mat('#225778',.2,.55));
 
- // Solar panel arrays mounted on roof
- for(let x of [-21,-13,-5,3,19]) {
-  const panel=box(scene,x,8.38,-8,6.3,.15,8,mat('#225778',.2,.55));
-  panel.rotation.x=-.08;
+ const positions=[[-18,-15],[-9,-15],[0,-15],[9,-15],[18,-15]];
 
-  for(let j=0;j<4;j++)
-   box(scene,x-2.35+j*1.55,8.48,-8,.045,.025,7.7,mat('#8bcce0',.2,.4));
- }
-
- // Dedicated solar-array mounting cradle immediately beside the stair landing.
- box(scene,10,8.55,17.25,4.6,.18,3.2,mat('#536c78',.42,.55));
-
- for(const x of [8.2,11.8]) {
-  box(scene,x,8.83,17.25,.14,.42,2.5,mat('#a9b8b8',.35,.65));
-  box(scene,x,9.06,17.25,.32,.08,2.6,mat('#c2a76e',.35,.55));
- }
-
- const mountLabel=makeLabel('SOLAR ARRAY MOUNT');
- mountLabel.position.set(10,10.1,17.25);
- mountLabel.scale.set(3.8,.58,1);
- scene.add(mountLabel);
-
- // Homely crew corner
- box(scene,0,.22,8,13,.18,5,mat('#987b61'));
-
- for(let x of [-4.5,4.5]) {
-  box(scene,x,.85,8,2.2,1.2,1,mat('#c5b19a'));
-  box(scene,x,.5,7.35,2.3,.18,.25,mat('#83a6a3'));
- }
-
- for(let x of [-7,7]) {
-  cylinder(scene,x,6.7,7,.12,1.8,mat('#e2c58a'));
-
-  const light=new THREE.PointLight('#ffe0a6',2,10);
-  light.position.set(x,5.8,7);
-  scene.add(light);
- }
-
- for(let x of [-26.72,26.72]) {
-  const window=new THREE.Mesh(
-   new THREE.CircleGeometry(2.2,40),
-   new THREE.MeshBasicMaterial({color:'#193b56'})
+ positions.forEach(([x,z],i)=>{
+  const pad=new THREE.Mesh(
+   new THREE.CylinderGeometry(4.5,4.5,.15,36),
+   mat('#8b9da1',.6,.2)
   );
-  window.position.set(x,4,-1);
-  window.rotation.y=x<0?Math.PI/2:-Math.PI/2;
-  scene.add(window);
- }
+  pad.position.set(x,.02,z);
+  scene.add(pad);
 
- makeStation('solar',-18,-15,'SOLAR POWER','Solar electricity is supplied by the roof panels and stored in the battery.');
- makeStation('water',-9,-15,'WATER PROCESSING','The water system collects, extracts, condenses and purifies water.');
- makeStation('oxygen',0,-15,'OXYGEN PRODUCTION','The reactor separates oxygen from lunar minerals.');
- makeStation('habitat',9,-15,'CREW HABITAT','The habitat provides a protected pressurised living space.');
- makeStation('farm',18,-15,'CULTIVATION','The cultivation bay supports plant growth and irrigation.');
+  const ring=new THREE.Mesh(
+   new THREE.TorusGeometry(4.5,.08,8,48),
+   new THREE.MeshBasicMaterial({color:'#54c8ef',transparent:true,opacity:.55})
+  );
+  ring.rotation.x=Math.PI/2;
+  ring.position.set(x,.15,z);
+  scene.add(ring);
 
- for(let x of [-18,-9,0,9,18]) {
-  const pipe=cylinder(scene,x,6.8,-5,.12,18,mat('#3d9db7',.3,.5));
-  pipe.rotation.x=Math.PI/2;
- }
-
- const aisleX={solar:-19,water:-10,oxygen:0,habitat:10,farm:19};
-
- for(const [key,x] of Object.entries(aisleX)) {
-  const sign=makeLabel(key.toUpperCase()+' STORAGE');
-  sign.position.set(x,6.2,17);
-  sign.scale.set(4,.65,1);
+  const sign=label(Object.keys(groups)[i]+' ASSEMBLY BAY');
+  sign.position.set(x,3,z);
   scene.add(sign);
- }
 
- specifications.forEach(([type,group,name,x,z,section])=>{
-  const mesh=makeEquipment(type);
-  mesh.position.set(x,1.1,z);
+  stations.push({
+   key:Object.keys(groups)[i],
+   x,z,ring,built:false
+  });
+ });
+
+ defs.forEach(([type,group,name,x,z,description])=>{
+  const mesh=makeModel(type);
+  mesh.position.set(x,1.05,z);
   scene.add(mesh);
 
-  const board=makeLabel(name);
-  board.position.set(0,-1.1,0);
-  mesh.add(board);
+  const tag=label(name);
+  tag.position.set(0,1.15,0);
+  mesh.add(tag);
 
-  parts.push({type,group,name,mesh,section,placed:false,collected:false});
+  parts.push({
+   type,group,name,description,x,z,mesh,
+   collected:false,placed:false
+  });
  });
 
  player=new THREE.Group();
@@ -1283,653 +548,511 @@ function buildWorld() {
  player.add(camera);
  camera.position.set(0,1.65,0);
 
- const gloves=mat(suitColor,.5,.1);
+ const glove=mat(suitColor,.5,.1);
 
- for(const x of [-.35,.35]) {
-  const glove=new THREE.Mesh(new THREE.SphereGeometry(.15),gloves);
-  glove.position.set(x,-.38,-.7);
-  glove.scale.set(1,.7,1.2);
-  camera.add(glove);
+ for(const x of [-.35,.35]){
+  const hand=new THREE.Mesh(new THREE.SphereGeometry(.15),glove);
+  hand.position.set(x,-.38,-.7);
+  hand.scale.set(1,.7,1.2);
+  camera.add(hand);
  }
 
  clock=new THREE.Clock();
 }
 
-function connectPart(site,part,index) {
- if(part.group==='habitat') {
-  part.mesh.parent=scene;
-  part.mesh.scale.setScalar(1);
-
-  if(part.type==='pressure_shell') {
-   const sealMat=mat('#7daab2',.4,.35);
-
-   for(const x of [-26.55,26.55]) {
-    box(scene,x,4,-4,.18,7.7,52,sealMat);
-   }
-
-   for(const z of [-30.55,22.55])
-    box(scene,0,4,z,52,.18,.18,sealMat);
-
-   box(scene,0,7.52,-4,52,.12,52,sealMat);
-   part.mesh.position.set(0,1,-4);
-
-  } else if(part.type==='regolith_shield') {
-   // Four-sided radiation protection. Every segment uses double-sided materials
-   // and layered geometry so it remains visible from inside and outside.
-   part.mesh.visible=false;
-
-   const bermMat=new THREE.MeshStandardMaterial({
-    color:'#81755e',
-    roughness:1,
-    metalness:0,
-    side:THREE.DoubleSide
-   });
-
-   const capMat=new THREE.MeshStandardMaterial({
-    color:'#b2a17c',
-    roughness:.94,
-    metalness:0,
-    side:THREE.DoubleSide
-   });
-
-   const edgeMat=new THREE.MeshStandardMaterial({
-    color:'#5d6666',
-    roughness:.82,
-    metalness:.12,
-    side:THREE.DoubleSide
-   });
-
-   const makeBerm=(x,y,z,w,h,d)=>{
-    const body=box(scene,x,y,z,w,h,d,bermMat);
-    body.material.side=THREE.DoubleSide;
-
-    const cap=box(scene,x,y+h/2+.08,z,w+.16,.16,d+.16,capMat);
-    cap.material.side=THREE.DoubleSide;
-
-    const footing=box(scene,x,.18,z,w+.5,.32,d+.5,edgeMat);
-    footing.material.side=THREE.DoubleSide;
-
-    return body;
-   };
-
-   // Side berms are broken into overlapping transportable sections.
-   for(const x of [-29.2,29.2]) {
-    for(let z=-27;z<=19;z+=9.2) {
-     makeBerm(x,1.45,z,4.8,2.9,9.6);
-
-     for(const xx of [x-2.15,x+2.15])
-      box(scene,xx,1.1,z,.16,1.9,.22,edgeMat);
-    }
-   }
-
-   // Front and rear runs complete the four-direction shield perimeter.
-   for(const z of [25.2,-33.2]) {
-    for(let x=-24;x<=24;x+=9.6) {
-     makeBerm(x,1.45,z,9.8,2.9,4.8);
-
-     for(const zz of [z-2.15,z+2.15])
-      box(scene,x,1.1,zz,.22,1.9,.16,edgeMat);
-    }
-   }
-
-   // Corner returns visibly join the four runs instead of leaving gaps.
-   for(const x of [-29.2,29.2]) {
-    for(const z of [-33.2,25.2])
-     makeBerm(x,1.35,z,5.1,2.7,5.1);
-   }
-
-   return;
-
-  } else if(part.type==='eclss') {
-   part.mesh.position.set(0,1,-4);
-   const ductMat=mat('#58a8b8',.35,.45);
-
-   for(const x of [-18,-9,0,9,18]) {
-    const duct=box(scene,x,6.9,-4,.22,.22,42,ductMat);
-    duct.position.z=-4;
-
-    for(const z of [-22,-10,2,14])
-     box(scene,x,6.9,z,1.2,.22,.22,ductMat);
-   }
-
-   for(const z of [-24,16])
-    box(scene,0,6.9,z,40,.22,.22,ductMat);
-  }
-
-  return;
- }
-
- if(part.type==='panel') {
-  // Solar panel remains outside on the roof.
-  part.mesh.parent=scene;
-  part.mesh.position.set(10,8.78,17.15);
-  part.mesh.scale.setScalar(1.5);
-
- } else {
-  part.mesh.parent=site.g;
-  part.mesh.position.set(-2.5+(index%3)*2.5,.55,-1);
-  part.mesh.rotation.set(0,0,0);
-  part.mesh.scale.setScalar(.9);
- }
-
- const points=[
-  new THREE.Vector3(
-   part.type==='panel'?10:part.mesh.position.x,
-   part.type==='panel'?8.78:part.mesh.position.y+.3,
-   part.type==='panel'?17.15:part.mesh.position.z
-  ),
-  new THREE.Vector3(site.x,.7,site.z-3.2)
- ];
-
- const curve=new THREE.CatmullRomCurve3(points);
-
- const tube=new THREE.Mesh(
-  new THREE.TubeGeometry(curve,25,.05,8,false),
-  mat('#39b5b7',.25,.5)
- );
-
- if(part.type==='panel') scene.add(tube);
- else site.g.add(tube);
-}
-
-function updateTasks() {
- $('tasks').innerHTML=Object.entries(groupSizes).map(([key,size])=>{
-  const count=parts.filter(p=>p.group===key&&p.placed).length;
-
-  return `<div style="color:${completed.has(key)?'#91e9b7':'#dce9ed'}">
-   ${completed.has(key)?'✓':'○'} ${groupNames[key]}: ${completed.has(key)?'ONLINE':count+'/'+size}
-  </div>`;
- }).join('');
-}
-
-function equipmentLibrary() {
+function renderInventory(){
  const list=$('equipmentList');
  list.innerHTML='';
 
- for(const part of parts) {
-  const button=document.createElement('button');
-  button.textContent=part.name;
+ parts.forEach(p=>{
+  const b=document.createElement('button');
+  b.textContent=(p.placed?'✓ ':p.collected?'IN HAND ':'')+p.name;
+  b.classList.toggle('selected',selected===p);
+  b.disabled=p.placed;
 
-  button.onclick=()=>{
-   $('guideTitle').textContent=explanations[part.type][0];
-   $('guideText').textContent=explanations[part.type][1];
+  b.onclick=()=>{
+   selected=p;
+   $('guideTitle').textContent=p.name;
+   $('guideText').textContent=p.description;
+   renderInventory();
+
+   prompt(
+    p.collected
+    ?'This item is already with you.'
+    :'Selected: '+p.name+'. Move close to it and tap PICK / INSTALL.'
+   );
   };
 
-  list.appendChild(button);
+  list.appendChild(b);
+ });
+}
+
+function updateTasks(){
+ $('tasks').innerHTML=Object.entries(groups).map(([k,n])=>{
+  let c=parts.filter(p=>p.group===k&&p.placed).length;
+  return `<div>${completed.has(k)?'🟢':'◯'} ${n}: ${completed.has(k)?'ONLINE':c+'/'+counts[k]}</div>`;
+ }).join('');
+}
+
+function prompt(t){
+ $('prompt').textContent=t;
+}
+
+function nearestUncollected(){
+ let best=null,dmin=4.5;
+
+ for(const p of parts){
+  if(p.placed||p.collected)continue;
+
+  const d=player.position.distanceTo(p.mesh.position);
+
+  if(d<dmin){
+   best=p;
+   dmin=d;
+  }
  }
+
+ return best;
 }
 
-function nearestPart() {
- let result=null;
- let distance=3.7;
+function take(p){
+ if(!p||p.placed||p.collected)return;
 
- for(const part of parts) {
-  if(part.placed||part.collected) continue;
+ p.collected=true;
+ held=p;
+ selected=p;
 
-  const d=player.position.distanceTo(part.mesh.position);
+ p.mesh.parent=camera;
+ p.mesh.position.set(0,-.15,-1.35);
+ p.mesh.rotation.set(.2,0,0);
+ p.mesh.scale.setScalar(.48);
 
-  if(d<distance) {
-   distance=d;
-   result=part;
-  }
- }
+ $('carrying').textContent=p.name.toUpperCase();
+ $('guideTitle').textContent=p.name;
+ $('guideText').textContent=p.description;
 
- return result;
+ renderInventory();
+
+ prompt('Carrying '+p.name+'. Go to the '+groups[p.group]+' assembly bay and tap INSTALL.');
 }
 
-function message(text) {
- $('prompt').textContent=text;
-}
-
-function actionPrompt(desktopText,mobileText) {
- return touchDevice?mobileText:desktopText;
-}
-
-function interact() {
- if(held) {
-  let site=sites.find(s=>
-   s.group===held.group &&
-   !s.built &&
-   Math.hypot(player.position.x-s.x,player.position.z-s.z)<6.5
-  );
-
-  // The pressure envelope and ECLSS are outpost-wide systems.
-  // One E press near the front entrance deploys radiation protection on all four sides.
-  if(held.type==='regolith_shield') {
-   const nearEntrance=
-    Math.abs(player.position.x)<8 &&
-    player.position.z>18 &&
-    player.position.z<32 &&
-    playerLevel==='ground';
-
-   if(!nearEntrance) {
-    message(actionPrompt(
-     'Bring the radiation-shield package to the front entrance area and press E.',
-     'Bring the radiation-shield package to the front entrance area and tap USE.'
-    ));
-    return;
-   }
-
-   site=sites.find(s=>s.group==='habitat'&&!s.built);
-
-  } else if(
-   held.group==='habitat' &&
-   Math.abs(player.position.x)<26 &&
-   player.position.z>-30 &&
-   player.position.z<22
-  ) {
-   site=sites.find(s=>s.group==='habitat'&&!s.built);
-  }
-
-  // The solar array must be carried up the front staircase and placed on the mounting cradle immediately beside the stair landing.
-  if(held.type==='panel') {
-   const onRoof=playerLevel==='roof' && player.position.y>7.5;
-   const nearRoofArray=Math.hypot(
-    player.position.x-10,
-    player.position.z-17.15
-   )<4.8;
-
-   if(!onRoof||!nearRoofArray) {
-    message('Carry the solar array up the front staircase. Its mounting point is just ahead of the staircase on the roof.');
-    return;
-   }
-
-   site=sites.find(s=>s.group==='solar'&&!s.built);
-  }
-
-  if(!site) {
-   message(actionPrompt(
-    'Take this component to its matching assembly bay, then press E.',
-    'Take this component to its matching assembly bay, then tap USE.'
-   ));
-   return;
-  }
-
-  const index=parts.filter(p=>p.group===held.group&&p.placed).length;
-  const part=held;
-
-  connectPart(site,part,index);
-
-  part.placed=true;
-  part.collected=false;
-  held=null;
-
-  const count=parts.filter(p=>p.group===part.group&&p.placed).length;
-
-  message(`${groupNames[part.group]} component installed: ${count}/${groupSizes[part.group]}`);
-
-  if(count===groupSizes[part.group]) {
-   completed.add(part.group);
-   site.built=true;
-   site.ring.material.opacity=.8;
-   site.beacon.material.color.set('#72ffb0');
-   site.spine.material=mat('#4fd9a5',.25,.5);
-   message(`${groupNames[part.group]} is now ONLINE!`);
-  }
-
-  updateTasks();
-
-  if(completed.size===5) {
-   setTimeout(showCertificate,800);
-  }
-
+function drop(){
+ if(!held){
+  prompt('You are not carrying equipment.');
   return;
  }
 
- const part=nearestPart();
-
- if(part) {
-  held=part;
-  part.collected=true;
-  part.mesh.parent=camera;
-  part.mesh.position.set(0,-.2,-1.55);
-  part.mesh.rotation.set(.2,0,0);
-  part.mesh.scale.setScalar(.55);
-
-  $('guideTitle').textContent=explanations[part.type][0];
-  $('guideText').textContent=explanations[part.type][1];
-
-  message('Carry the equipment to its matching assembly bay.');
- }
-}
-
-function dropPart() {
- if(!held)return;
-
- const part=held;
+ const p=held;
  held=null;
- part.collected=false;
- part.mesh.parent=scene;
+ p.collected=false;
+ p.mesh.parent=scene;
 
- part.mesh.position.copy(player.position).add(
-  new THREE.Vector3(
-   Math.sin(yaw)*1.5,
-   .4,
-   -Math.cos(yaw)*1.5
-  )
+ p.mesh.position.copy(player.position).add(
+  new THREE.Vector3(Math.sin(yaw)*1.8,.7,-Math.cos(yaw)*1.8)
  );
 
- part.mesh.scale.setScalar(1);
- part.mesh.rotation.set(0,0,0);
+ p.mesh.scale.setScalar(1);
+ p.mesh.rotation.set(0,0,0);
 
- message(actionPrompt(
-  'Equipment dropped. Walk near it and press E to pick it up again.',
-  'Equipment dropped. Walk near it and tap USE to pick it up again.'
- ));
+ $('carrying').textContent='NOTHING';
+
+ renderInventory();
+
+ prompt(p.name+' dropped. Select it or move close and pick it up again.');
 }
 
-function showCertificate() {
+function install(){
+ if(!held){
+  let p=selected;
+
+  if(!p||p.placed){
+   p=nearestUncollected();
+  }
+
+  if(!p){
+   prompt('Select an available item from the inventory or move closer to equipment.');
+   return;
+  }
+
+  if(player.position.distanceTo(p.mesh.position)>4.8){
+   prompt('Move closer to '+p.name+' to collect it.');
+   return;
+  }
+
+  take(p);
+  return;
+ }
+
+ const station=stations.find(s=>s.key===held.group);
+
+ if(!station||Math.hypot(player.position.x-station.x,player.position.z-station.z)>6.2){
+  prompt('Take '+held.name+' to the '+groups[held.group]+' assembly bay.');
+  return;
+ }
+
+ const p=held;
+
+ p.mesh.parent=scene;
+ p.mesh.position.set(
+  station.x+(Math.random()-.5)*3,
+  1,
+  station.z+(Math.random()-.5)*2
+ );
+
+ p.mesh.rotation.set(0,Math.random()*Math.PI,0);
+ p.mesh.scale.setScalar(.85);
+ p.placed=true;
+ p.collected=false;
+ held=null;
+
+ $('carrying').textContent='NOTHING';
+
+ const count=parts.filter(q=>q.group===p.group&&q.placed).length;
+
+ prompt(p.name+' installed · '+count+'/'+counts[p.group]+' components');
+
+ if(count===counts[p.group]){
+  completed.add(p.group);
+  station.built=true;
+  station.ring.material.color.set('#5bffac');
+  prompt(groups[p.group]+' is now ONLINE!');
+ }
+
+ updateTasks();
+ renderInventory();
+
+ if(completed.size===5)setTimeout(showCertificate,900);
+}
+
+function interact(){
+ if(held){
+  install();
+  return;
+ }
+
+ if(selected&&!selected.placed&&!selected.collected){
+  if(player.position.distanceTo(selected.mesh.position)<4.8){
+   take(selected);
+   return;
+  }
+ }
+
+ const p=nearestUncollected();
+
+ if(p){
+  selected=p;
+  take(p);
+  return;
+ }
+
+ prompt('Select an equipment item or move closer to a component.');
+}
+
+function showCertificate(){
  paused=true;
- clearTouchControls();
- document.exitPointerLock?.();
+ clearTouch();
 
  $('hud').classList.add('hidden');
- document.body.classList.remove('mobile-playing');
+ document.body.classList.remove('playing');
+
  $('overlay').classList.remove('hidden');
+ hideModals();
 
- document.querySelectorAll('#overlay .modal').forEach(el=>el.classList.add('hidden'));
  $('certificate').classList.remove('hidden');
-
- $('certName').textContent=astronaut;
+ $('certName').textContent=pilot;
 }
 
-function pauseGame() {
+function hideModals(){
+ document.querySelectorAll('#overlay .modal').forEach(m=>m.classList.add('hidden'));
+}
+
+function pause(){
  if(!started||paused)return;
 
  paused=true;
- clearTouchControls();
+ clearTouch();
  document.exitPointerLock?.();
 
  $('overlay').classList.remove('hidden');
+ hideModals();
  $('pause').classList.remove('hidden');
 }
 
-function resumeGame() {
+function resume(){
  paused=false;
  $('overlay').classList.add('hidden');
- if(!touchDevice)renderer.domElement.requestPointerLock?.();
+
+ if(!touch)renderer.domElement.requestPointerLock?.();
 }
 
-function exitGame() {
+function quit(){
  paused=true;
- clearTouchControls();
+ clearTouch();
  document.exitPointerLock?.();
- document.body.classList.remove('mobile-playing');
 
- $('pause').classList.add('hidden');
+ $('overlay').classList.remove('hidden');
+ hideModals();
  $('goodbye').classList.remove('hidden');
 }
 
-function animate() {
+function clearTouch(){
+ if(joyPointer!==null&&$('joystick').hasPointerCapture(joyPointer))
+  $('joystick').releasePointerCapture(joyPointer);
+
+ if(lookPointer!==null&&renderer?.domElement?.hasPointerCapture(lookPointer))
+  renderer.domElement.releasePointerCapture(lookPointer);
+
+ joyPointer=null;
+ lookPointer=null;
+ joyX=joyY=0;
+
+ $('joystickStick').style.transform='translate(-50%,-50%)';
+}
+
+function animate(){
  if(!started)return;
 
  requestAnimationFrame(animate);
 
  const dt=Math.min(clock.getDelta(),.04);
 
- if(!paused) {
-  const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
-  const right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
-  const movement=new THREE.Vector3();
+ if(!paused){
+  const f=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
+  const r=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
+  const m=new THREE.Vector3();
 
-  if(keys.KeyW)movement.add(forward);
-  if(keys.KeyS)movement.sub(forward);
-  if(keys.KeyD)movement.add(right);
-  if(keys.KeyA)movement.sub(right);
-  movement.addScaledVector(right,joystickX);
-  movement.addScaledVector(forward,-joystickY);
+  if(keys.KeyW)m.add(f);
+  if(keys.KeyS)m.sub(f);
+  if(keys.KeyD)m.add(r);
+  if(keys.KeyA)m.sub(r);
 
-  if(movement.lengthSq()) {
-   movement.normalize().multiplyScalar(dt*5);
-   player.position.add(movement);
-   energy-=dt*.12;
+  m.addScaledVector(r,joyX);
+  m.addScaledVector(f,-joyY);
+
+  if(m.lengthSq()){
+   m.normalize().multiplyScalar(dt*5);
+   player.position.add(m);
+   energy=Math.max(0,energy-dt*.1);
   }
 
-  // Broad lunar-surface freedom outside the outpost.
-  const px=player.position.x;
-  const pz=player.position.z;
+  player.position.x=THREE.MathUtils.clamp(player.position.x,-95,95);
+  player.position.z=THREE.MathUtils.clamp(player.position.z,-100,100);
 
-  player.position.x=THREE.MathUtils.clamp(px,-95,95);
-  player.position.z=THREE.MathUtils.clamp(pz,-100,100);
-
-  // Walkable stair transition and roof access.
-  if(player.position.z>20&&player.position.z<40&&player.position.x>5&&player.position.x<15) {
-   playerLevel='roof';
+  if(player.position.z>20&&player.position.z<40&&player.position.x>5&&player.position.x<15)
    player.position.y=THREE.MathUtils.clamp((39.4-player.position.z)*.43,0,8);
-  } else {
-   playerLevel=player.position.y>7.5?'roof':'ground';
+  else
    player.position.y=player.position.y>7.5?8:0;
-  }
 
-  if(held) {
-   $('carrying').textContent=held.name.toUpperCase();
-  } else {
-   $('carrying').textContent='NOTHING';
-  }
-
-  energy=Math.max(0,energy);
-  $('energy').textContent=Math.floor(energy)+'%';
+  $('energy').textContent=Math.floor(energy);
   $('energyFill').style.width=energy+'%';
 
-  if(energy<=0) {
-   message('Energy depleted. Mission paused.');
-   pauseGame();
+  if(energy<=0){
+   prompt('Energy depleted. Mission paused.');
+   pause();
   }
 
-  const near=nearestPart();
+  if(held){
+   $('carrying').textContent=held.name.toUpperCase();
+  }else{
+   const near=nearestUncollected();
 
-  if(held) {
-   message(actionPrompt(
-    'Press E to install equipment at its assembly bay. Press Q to drop.',
-    'Tap USE to install equipment at its assembly bay. Tap DROP to drop.'
-   ));
-  } else if(near) {
-   message(actionPrompt(
-    'Press E to collect '+near.name,
-    'Tap USE to collect '+near.name
-   ));
+   if(near)
+    prompt('Nearby: '+near.name+' · select it and tap PICK / INSTALL');
   }
  }
 
  renderer.render(scene,camera);
 }
 
-const briefingSlides=[
- ['WELCOME TO THE MOON','Your mission is to establish a working lunar settlement. Explore the outpost and learn how astronauts could use local resources to support life.'],
- ['SOLAR POWER','Solar panels collect sunlight and convert it into electrical energy. Batteries store electricity for periods when sunlight is unavailable.'],
- ['WATER PRODUCTION','The lunar soil, called regolith, may contain frozen water. Heating, condensation and purification can help make water available for the crew.'],
- ['OXYGEN PRODUCTION','Oxygen may be extracted from oxygen-bearing lunar minerals through processes such as molten regolith electrolysis.'],
- ['CREW HABITAT','A lunar habitat needs a sealed pressure boundary, radiation protection and environmental control systems to support its occupants.'],
- ['CULTIVATION','Plant growth beds, nutrient supplies, irrigation and LED lights can support controlled food cultivation.'],
- ['YOUR MISSION','Collect the equipment, carry it to the correct assembly area and bring all five systems online. Good luck, astronaut!']
-];
+function showSlide(){
+ const s=slides[slide];
 
-function showBriefing() {
- const slide=briefingSlides[briefingIndex];
- $('slideCount').textContent=`BRIEFING ${briefingIndex+1} / ${briefingSlides.length}`;
- $('slideTitle').textContent=slide[0];
- $('slidebody').textContent=slide[1];
- $('previousSlide').style.display=briefingIndex===0?'none':'inline-block';
- $('nextSlide').textContent=briefingIndex===briefingSlides.length-1?'START MISSION':'NEXT';
+ $('slideTitle').textContent=s[0];
+ $('briefingText').textContent=s[1];
+
+ $('backSlide').style.display=slide===0?'none':'inline-block';
+ $('nextSlide').textContent=slide===slides.length-1?'START MISSION':'NEXT';
 }
 
-function startGame() {
- astronaut=$('pilotName').value.trim()||'Pioneer';
- $('pilotLabel').textContent=astronaut.toUpperCase();
- $('certName').textContent=astronaut;
+function startGame(){
+ pilot=$('pilotName').value.trim()||'Pioneer';
+
+ $('pilotLabel').textContent=pilot.toUpperCase();
+ $('certName').textContent=pilot;
+
+ hideModals();
  $('overlay').classList.add('hidden');
  $('hud').classList.remove('hidden');
- document.body.classList.toggle('mobile-playing',touchDevice);
+
+ document.body.classList.toggle('playing',touch);
 
  buildWorld();
- equipmentLibrary();
+ renderInventory();
  updateTasks();
 
  started=true;
  paused=false;
 
- if(!touchDevice)renderer.domElement.requestPointerLock?.();
+ if(!touch)renderer.domElement.requestPointerLock?.();
+
  animate();
 }
 
 $('colors').addEventListener('click',e=>{
- const swatch=e.target.closest('.swatch');
- if(!swatch)return;
+ const s=e.target.closest('.swatch');
 
- document.querySelectorAll('.swatch').forEach(el=>el.classList.remove('selected'));
- swatch.classList.add('selected');
- suitColor=swatch.dataset.color;
+ if(!s)return;
+
+ document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('selected'));
+
+ s.classList.add('selected');
+ suitColor=s.dataset.color;
 });
 
-$('beginBriefing').addEventListener('click',()=>{
- $('welcome').classList.add('hidden');
+$('startBriefing').onclick=()=>{
+ hideModals();
  $('briefing').classList.remove('hidden');
- briefingIndex=0;
- showBriefing();
-});
+ slide=0;
+ showSlide();
+};
 
-$('previousSlide').addEventListener('click',()=>{
- briefingIndex=Math.max(0,briefingIndex-1);
- showBriefing();
-});
+$('backSlide').onclick=()=>{
+ slide=Math.max(0,slide-1);
+ showSlide();
+};
 
-$('nextSlide').addEventListener('click',()=>{
- if(briefingIndex===briefingSlides.length-1) {
+$('nextSlide').onclick=()=>{
+ if(slide===slides.length-1){
   startGame();
   return;
  }
 
- briefingIndex++;
- showBriefing();
-});
+ slide++;
+ showSlide();
+};
 
-$('resume').addEventListener('click',resumeGame);
-$('quit').addEventListener('click',exitGame);
-$('exit').addEventListener('click',pauseGame);
-
-$('restart').addEventListener('click',()=>{
- location.reload();
-});
+$('resume').onclick=resume;
+$('quit').onclick=quit;
+$('exit').onclick=pause;
+$('restart').onclick=()=>location.reload();
 
 document.addEventListener('keydown',e=>{
  keys[e.code]=true;
 
- if(e.code==='Escape') {
-  if(!paused)pauseGame();
- }
-
+ if(e.code==='Escape'&&!paused)pause();
  if(e.code==='KeyE'&&!paused)interact();
- if(e.code==='KeyQ'&&!paused)dropPart();
+ if(e.code==='KeyQ'&&!paused)drop();
 });
 
-document.addEventListener('keyup',e=>{
- keys[e.code]=false;
-});
+document.addEventListener('keyup',e=>keys[e.code]=false);
 
-const joystick=$('joystick');
-const joystickStick=$('joystickStick');
+const joy=$('joystick');
+const stick=$('joystickStick');
 
-function updateJoystick(event) {
- const rect=joystick.getBoundingClientRect();
- const centerX=rect.left+rect.width/2;
- const centerY=rect.top+rect.height/2;
- const radius=Math.max(1,rect.width/2-8-joystickStick.offsetWidth/2);
- const dx=event.clientX-centerX;
- const dy=event.clientY-centerY;
- const distance=Math.hypot(dx,dy);
- const scale=distance>radius?radius/distance:1;
+function moveJoy(e){
+ const r=joy.getBoundingClientRect();
 
- joystickX=dx*scale/radius;
- joystickY=dy*scale/radius;
- joystickStick.style.transform=`translate(calc(-50% + ${dx*scale}px),calc(-50% + ${dy*scale}px))`;
+ const dx=e.clientX-(r.left+r.width/2);
+ const dy=e.clientY-(r.top+r.height/2);
+
+ const rad=r.width*.34;
+ const d=Math.hypot(dx,dy);
+ const s=d>rad?rad/d:1;
+
+ joyX=dx*s/rad;
+ joyY=dy*s/rad;
+
+ stick.style.transform=`translate(calc(-50% + ${dx*s}px),calc(-50% + ${dy*s}px))`;
 }
 
-joystick.addEventListener('pointerdown',event=>{
- event.preventDefault();
- if(joystickPointer!==null)return;
- joystickPointer=event.pointerId;
- joystick.setPointerCapture(event.pointerId);
- updateJoystick(event);
+joy.addEventListener('pointerdown',e=>{
+ e.preventDefault();
+
+ if(joyPointer!==null)return;
+
+ joyPointer=e.pointerId;
+ joy.setPointerCapture(e.pointerId);
+
+ moveJoy(e);
 });
 
-joystick.addEventListener('pointermove',event=>{
- if(event.pointerId===joystickPointer)updateJoystick(event);
+joy.addEventListener('pointermove',e=>{
+ if(e.pointerId===joyPointer)moveJoy(e);
 });
 
-function resetJoystick(event) {
- if(event.pointerId!==joystickPointer)return;
- joystickPointer=null;
- joystickX=0;
- joystickY=0;
- joystickStick.style.transform='translate(-50%,-50%)';
+function joyEnd(e){
+ if(e.pointerId!==joyPointer)return;
+
+ joyPointer=null;
+ joyX=joyY=0;
+
+ stick.style.transform='translate(-50%,-50%)';
 }
 
-function clearTouchControls() {
- if(joystickPointer!==null&&joystick.hasPointerCapture(joystickPointer)) {
-  joystick.releasePointerCapture(joystickPointer);
- }
- if(lookPointer!==null&&renderer?.domElement?.hasPointerCapture(lookPointer)) {
-  renderer.domElement.releasePointerCapture(lookPointer);
- }
- joystickPointer=null;
- joystickX=0;
- joystickY=0;
- joystickStick.style.transform='translate(-50%,-50%)';
- lookPointer=null;
-}
+joy.addEventListener('pointerup',joyEnd);
+joy.addEventListener('pointercancel',joyEnd);
+joy.addEventListener('lostpointercapture',joyEnd);
 
-joystick.addEventListener('pointerup',resetJoystick);
-joystick.addEventListener('pointercancel',resetJoystick);
-joystick.addEventListener('lostpointercapture',resetJoystick);
-
-$('touchInteract').addEventListener('click',()=>{
+$('touchUse').onclick=()=>{
  if(started&&!paused)interact();
+};
+
+$('touchDrop').onclick=()=>{
+ if(started&&!paused)drop();
+};
+
+document.addEventListener('pointerdown',e=>{
+ if(!touch||paused||!started||lookPointer!==null||e.target!==renderer?.domElement)return;
+
+ lookPointer=e.pointerId;
+ lastX=e.clientX;
+ lastY=e.clientY;
+
+ renderer.domElement.setPointerCapture(e.pointerId);
 });
 
-$('touchDrop').addEventListener('click',()=>{
- if(started&&!paused)dropPart();
-});
+document.addEventListener('pointermove',e=>{
+ if(!touch||e.pointerId!==lookPointer||paused)return;
 
-document.addEventListener('pointerdown',event=>{
- if(!touchDevice||paused||!started||lookPointer!==null||event.target!==renderer?.domElement)return;
- lookPointer=event.pointerId;
- lastLookX=event.clientX;
- lastLookY=event.clientY;
- renderer.domElement.setPointerCapture(event.pointerId);
-});
+ yaw-=(e.clientX-lastX)*.004;
 
-document.addEventListener('pointermove',event=>{
- if(!touchDevice||event.pointerId!==lookPointer||paused)return;
+ pitch=THREE.MathUtils.clamp(
+  pitch-(e.clientY-lastY)*.004,
+  -1.35,
+  1.35
+ );
 
- yaw-=(event.clientX-lastLookX)*.004;
- pitch=THREE.MathUtils.clamp(pitch-(event.clientY-lastLookY)*.004,-1.45,1.45);
- lastLookX=event.clientX;
- lastLookY=event.clientY;
+ lastX=e.clientX;
+ lastY=e.clientY;
+
  player.rotation.y=yaw;
  camera.rotation.x=pitch;
 });
 
-function endTouchLook(event) {
- if(event.pointerId===lookPointer)lookPointer=null;
+function lookEnd(e){
+ if(e.pointerId===lookPointer)lookPointer=null;
 }
 
-document.addEventListener('pointerup',endTouchLook);
-document.addEventListener('pointercancel',endTouchLook);
+document.addEventListener('pointerup',lookEnd);
+document.addEventListener('pointercancel',lookEnd);
 
 document.addEventListener('mousemove',e=>{
- if(touchDevice)return;
- if(document.pointerLockElement!==renderer?.domElement||paused)return;
+ if(touch||document.pointerLockElement!==renderer?.domElement||paused)return;
 
  yaw-=e.movementX*.002;
- pitch-=e.movementY*.002;
- pitch=THREE.MathUtils.clamp(pitch,-1.45,1.45);
+
+ pitch=THREE.MathUtils.clamp(
+  pitch-e.movementY*.002,
+  -1.35,
+  1.35
+ );
 
  player.rotation.y=yaw;
  camera.rotation.x=pitch;
 });
 
 document.addEventListener('pointerlockchange',()=>{
- if(!document.pointerLockElement&&started&&!paused)pauseGame();
+ if(!touch&&!document.pointerLockElement&&started&&!paused)pause();
 });
 
 window.addEventListener('resize',()=>{
@@ -1937,9 +1060,10 @@ window.addEventListener('resize',()=>{
 
  camera.aspect=innerWidth/innerHeight;
  camera.updateProjectionMatrix();
+
  renderer.setSize(innerWidth,innerHeight);
 });
-</script>
 
+</script>
 </body>
 </html>
